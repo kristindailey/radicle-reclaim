@@ -2,6 +2,7 @@
 /.claude/
 /docs/
 CLAUDE.md
+CONTEXT.md
 
 # Node / pnpm
 node_modules/
