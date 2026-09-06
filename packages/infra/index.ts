@@ -117,12 +117,10 @@ new aws.s3.BucketNotification(
   { dependsOn: [allowS3] },
 );
 
-// --- The read side: AppSync GraphQL API the dashboard queries (issue #26, D22) --
-
-// The read Lambda that backs the AppSync data source. Its own role, read-only on
-// the one table and its index: Scan (the reconciliation table and the dashboard's
-// scan-derived figures) and Query (the recoverable-denial GSI and a claim's
-// proposed lines). No write, no S3: the read path touches nothing else.
+// The read Lambda that backs the AppSync data source (issue #26, D22). Its own
+// role, read-only on the one table and its index: Scan (the reconciliation table
+// and the dashboard's scan-derived figures) and Query (the recoverable-denial GSI
+// and a claim's proposed lines). No write, no S3: the read path touches nothing else.
 const readLambdaRole = new aws.iam.Role("read-lambda", {
   assumeRolePolicy: JSON.stringify({
     Version: "2012-10-17",

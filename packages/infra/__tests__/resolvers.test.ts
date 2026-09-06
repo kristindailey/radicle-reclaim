@@ -127,6 +127,9 @@ describe("toDashboard: the stat-tile figures, dollars at risk off the GSI", () =
     const { result, lineItems, recoverableDenialItems } = reconciled();
     const dashboard = toDashboard(lineItems, recoverableDenialItems);
 
+    // Every fixture CAS sits under an SVC (line grain), so the read side's
+    // line-only sums equal the core's aggregate; a header-level reason, which the
+    // store does not persist (#23), is out of this fixture's and this ticket's scope.
     const { aggregates } = result;
     expect(dashboard).toEqual({
       totalRemittance: aggregates.totalRemittance,

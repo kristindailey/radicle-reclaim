@@ -1,3 +1,5 @@
+import { cents } from "core";
+
 import type { LineItem, ProposedLineItem } from "../persistence";
 import type {
   GqlDashboard,
@@ -68,22 +70,26 @@ function sumByClassification(
  * recoverable-denial lines, so summing their recoverable-denial adjustments yields
  * the hero figure without a table scan. Passing an empty GSI result zeroes the
  * hero while the scanned figures hold, which is the seam the dashboard relies on.
+ *
+ * These sum the persisted **line** grain only. The store keeps no claim-level `CAS`
+ * (a `ChargeItem` carries no adjustments, #23), so a header-level reason is not
+ * reachable here; the core's `aggregate()` folds one in when present. The two agree
+ * for the common case (and the whole demo fixture), where every `CAS` sits under an
+ * `SVC`; surfacing header-level reasons is a persistence change, not a read one.
  */
 export function toDashboard(
   lines: LineItem[],
   recoverableDenialLines: LineItem[],
 ): GqlDashboard {
   return {
-    totalRemittance: lines.reduce((total, line) => total + line.billed, 0),
-    totalPaid: lines.reduce((total, line) => total + line.paid, 0),
-    totalContractual: sumByClassification(lines, "contractual"),
-    totalPatientResponsibility: sumByClassification(
-      lines,
-      "patient-responsibility",
+    totalRemittance: cents(lines.reduce((total, line) => total + line.billed, 0)),
+    totalPaid: cents(lines.reduce((total, line) => total + line.paid, 0)),
+    totalContractual: cents(sumByClassification(lines, "contractual")),
+    totalPatientResponsibility: cents(
+      sumByClassification(lines, "patient-responsibility"),
     ),
-    dollarsAtRisk: sumByClassification(
-      recoverableDenialLines,
-      "recoverable-denial",
+    dollarsAtRisk: cents(
+      sumByClassification(recoverableDenialLines, "recoverable-denial"),
     ),
     unmatchedCount: lines.filter((line) => line.disposition === "unmatched")
       .length,

@@ -1,11 +1,15 @@
+import type { Cents } from "core";
+
 /**
  * The read API's GraphQL contract (issue #26, D22): the SDL AppSync serves and
  * the TypeScript result shapes the resolver Lambda returns, kept in one file so
  * the schema and the code that answers it cannot drift.
  *
- * Domain values that carry hyphens (dispositions like `recoverable-denial`,
- * classifications like `patient-responsibility`) stay `String`, not GraphQL enums,
- * so the stored value reaches the dashboard verbatim. Money is `Int` cents (D12).
+ * Money stays the branded `Cents` (D7): still integer cents over the wire (GraphQL
+ * `Int`), dollars appear only at the Vue edge. Domain values that carry hyphens
+ * (dispositions like `recoverable-denial`, classifications like
+ * `patient-responsibility`) stay `String`, not GraphQL enums, so the stored value
+ * reaches the dashboard verbatim.
  */
 
 /** One classified `CAS` reason, group code plus decoded CARC (the dashboard's adjustment cell). */
@@ -13,7 +17,7 @@ export interface GqlAdjustment {
   groupCode: string;
   carc: string;
   carcText: string;
-  amount: number;
+  amount: Cents;
   classification: string;
 }
 
@@ -21,9 +25,9 @@ export interface GqlAdjustment {
 export interface GqlReconciledLine {
   claimControlNumber: string;
   lineNumber: number;
-  billed: number;
-  paid: number;
-  patientResponsibility: number;
+  billed: Cents;
+  paid: Cents;
+  patientResponsibility: Cents;
   disposition: string;
   adjustments: GqlAdjustment[];
   balanceWarning: string | null;
@@ -35,7 +39,7 @@ export interface GqlProposedLine {
   lineNumber: number;
   kind: string;
   status: string;
-  amount: number;
+  amount: Cents;
   groupCode: string | null;
   carc: string | null;
   idempotencyKey: string;
@@ -43,11 +47,11 @@ export interface GqlProposedLine {
 
 /** The dashboard stat-tile figures (D13), all money in integer cents. */
 export interface GqlDashboard {
-  totalRemittance: number;
-  totalPaid: number;
-  totalContractual: number;
-  totalPatientResponsibility: number;
-  dollarsAtRisk: number;
+  totalRemittance: Cents;
+  totalPaid: Cents;
+  totalContractual: Cents;
+  totalPatientResponsibility: Cents;
+  dollarsAtRisk: Cents;
   unmatchedCount: number;
   outOfBalanceCount: number;
 }

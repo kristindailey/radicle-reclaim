@@ -45,14 +45,34 @@ function tableName(): string {
   return name;
 }
 
+interface Page {
+  Items?: Record<string, unknown>[];
+  LastEvaluatedKey?: Record<string, unknown>;
+}
+
+// DynamoDB pages both Scan and Query, so every read walks the pages to the end,
+// casting each item to the stored shape it was written as.
+async function collect<T>(
+  send: (start: Record<string, unknown> | undefined) => Promise<Page>,
+): Promise<T[]> {
+  const items: T[] = [];
+  let start: Record<string, unknown> | undefined;
+  do {
+    const page = await send(start);
+    for (const item of page.Items ?? []) {
+      items.push(item as T);
+    }
+    start = page.LastEvaluatedKey;
+  } while (start);
+  return items;
+}
+
 // Demo-scale table, so listing every reconciled line is a scan filtered to the
 // LINE grain. Only dollars at risk is held to the no-scan bar (D12); the
 // reconciliation table reads the whole line set by design.
-async function scanLines(table: string): Promise<LineItem[]> {
-  const lines: LineItem[] = [];
-  let start: Record<string, unknown> | undefined;
-  do {
-    const page = await doc.send(
+function scanLines(table: string): Promise<LineItem[]> {
+  return collect<LineItem>((start) =>
+    doc.send(
       new ScanCommand({
         TableName: table,
         FilterExpression: "#type = :line",
@@ -60,24 +80,15 @@ async function scanLines(table: string): Promise<LineItem[]> {
         ExpressionAttributeValues: { ":line": "LINE" },
         ExclusiveStartKey: start,
       }),
-    );
-    for (const item of page.Items ?? []) {
-      lines.push(item as LineItem);
-    }
-    start = page.LastEvaluatedKey;
-  } while (start);
-  return lines;
+    ),
+  );
 }
 
 // The dollars-at-risk read (D12): a query on GSI1, whose single partition holds
 // exactly the matched, in-balance recoverable-denial lines. Never a scan.
-async function queryRecoverableDenialLines(
-  table: string,
-): Promise<LineItem[]> {
-  const lines: LineItem[] = [];
-  let start: Record<string, unknown> | undefined;
-  do {
-    const page = await doc.send(
+function queryRecoverableDenialLines(table: string): Promise<LineItem[]> {
+  return collect<LineItem>((start) =>
+    doc.send(
       new QueryCommand({
         TableName: table,
         IndexName: GSI1.NAME,
@@ -86,25 +97,18 @@ async function queryRecoverableDenialLines(
         ExpressionAttributeValues: { ":denial": RECOVERABLE_DENIAL_GSI1PK },
         ExclusiveStartKey: start,
       }),
-    );
-    for (const item of page.Items ?? []) {
-      lines.push(item as LineItem);
-    }
-    start = page.LastEvaluatedKey;
-  } while (start);
-  return lines;
+    ),
+  );
 }
 
 // A claim's proposed lines: a single-partition query, filtered to the proposed
 // grain so the claim's CHARGE header and reconciled lines don't come along.
-async function queryProposedLines(
+function queryProposedLines(
   table: string,
   claimControlNumber: string,
 ): Promise<ProposedLineItem[]> {
-  const items: ProposedLineItem[] = [];
-  let start: Record<string, unknown> | undefined;
-  do {
-    const page = await doc.send(
+  return collect<ProposedLineItem>((start) =>
+    doc.send(
       new QueryCommand({
         TableName: table,
         KeyConditionExpression: "#pk = :pk",
@@ -116,13 +120,8 @@ async function queryProposedLines(
         },
         ExclusiveStartKey: start,
       }),
-    );
-    for (const item of page.Items ?? []) {
-      items.push(item as ProposedLineItem);
-    }
-    start = page.LastEvaluatedKey;
-  } while (start);
-  return items;
+    ),
+  );
 }
 
 export async function handler(
