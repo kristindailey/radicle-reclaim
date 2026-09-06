@@ -3,8 +3,8 @@ import type { ProposedLine } from "../types";
 
 /**
  * The proposer (D5): a reconciled line drafts one Payment (when paid) plus one
- * Adjustment per `CAS` reason, all in a pending-review state a human approves —
- * the feeder never auto-posts. This tracer bullet drafts the Payment; the
+ * Adjustment per `CAS` reason, all in a pending-review state a human approves,
+ * so the feeder never auto-posts. This tracer bullet drafts the Payment; the
  * per-`CAS` Adjustment lines arrive with the classifier in a later ticket.
  *
  * Each key is derived deterministically from (835 control number, claim control

@@ -1,7 +1,7 @@
 import type { Cents } from "./money";
 
 /**
- * The typed shape of the reconcile seam. This file is the skeleton only — the
+ * The typed shape of the reconcile seam. This file is the skeleton only: the
  * fields are settled (issue #1), but no outcome logic populates them yet
  * (matching, classification, balancing, proposing land in later tickets).
  */
@@ -29,7 +29,7 @@ export type Disposition =
 /** A drafted worksheet line is one of two record types (Fiscal Periods model, D5). */
 export type ProposedLineKind = "payment" | "adjustment";
 
-/** Proposed lines are never auto-posted — they arrive pending a human's review (D5). */
+/** Proposed lines are never auto-posted; they arrive pending a human's review (D5). */
 export type ProposedLineStatus = "pending-review";
 
 // --- Input: seeded charges ------------------------------------------------
@@ -46,7 +46,7 @@ export interface ChargeLine {
 
 /**
  * A seeded charge: what this system billed, keyed by the claim control number it
- * assigned at 837 time (`CLP01`, D3) — the join key an 835 line matches back on.
+ * assigned at 837 time (`CLP01`, D3), the join key an 835 line matches back on.
  */
 export interface Charge {
   /** Claim control number, `CLP01`. The join key. */
@@ -81,7 +81,7 @@ export interface ClassifiedAdjustment {
   classification: AdjustmentClassification;
 }
 
-/** One reconciled service line — the primary reconciliation grain (D2). */
+/** One reconciled service line, the primary reconciliation grain (D2). */
 export interface ReconciledLine {
   /** Claim control number (`CLP01`) this line rolls up to. */
   claimControlNumber: string;
@@ -91,7 +91,7 @@ export interface ReconciledLine {
   billed: Cents;
   /** Paid amount, integer cents. */
   paid: Cents;
-  /** Patient-responsibility amount (group `PR`), integer cents — its own bucket (D18). */
+  /** Patient-responsibility amount (group `PR`), integer cents, its own bucket (D18). */
   patientResponsibility: Cents;
   /** One entry per `CAS` group-and-reason. */
   adjustments: ClassifiedAdjustment[];
@@ -105,7 +105,7 @@ export interface ReconciledLine {
 export interface ReconciledClaim {
   /** Claim control number, `CLP01`. The join key. */
   claimControlNumber: string;
-  /** Payer's own control number, `CLP07` — captured for resubmission, never the join key (D3). */
+  /** Payer's own control number, `CLP07`, captured for resubmission, never the join key (D3). */
   payerControlNumber?: string;
   lines: ReconciledLine[];
 }

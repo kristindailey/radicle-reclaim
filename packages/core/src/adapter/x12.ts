@@ -12,7 +12,7 @@ import type { GroupCode } from "../types";
 
 /** A `CAS` adjustment on the raw 835 graph, before classification. */
 export interface ParsedAdjustment {
-  groupCode: GroupCode;
+  groupCode: GroupCode | "unknown";
   /** Raw CARC. */
   carc: string;
   /** Adjusted amount, integer cents. */
@@ -44,7 +44,7 @@ export interface ParsedClaim {
 /** The typed 835 graph the loop-mapper produces from raw segments. */
 export interface Parsed835 {
   /**
-   * The reassociation trace number (`TRN02`) — the remittance-wide EFT/check
+   * The reassociation trace number (`TRN02`), the remittance-wide EFT/check
    * trace that identifies this 835. Serves as the "835 control number" component
    * of a proposed line's idempotency key (D12): stable across a redelivery of the
    * same remittance, and higher-entropy than the per-transaction `ST02`.
@@ -79,16 +79,17 @@ const GROUP_CODES: ReadonlySet<string> = new Set<GroupCode>([
 ]);
 
 /**
- * Validates a `CAS01` group code into the {@link GroupCode} union. The four codes
- * are a closed set, so a value outside them is malformed X12, not an expected gap
- * (unlike an unknown CARC, which decodes to its raw value) — a billing core fails
- * loud on it rather than miscount money.
+ * Maps a `CAS01` group code into the {@link GroupCode} union. The four codes are
+ * a closed set in valid X12, but payers do send junk, and one malformed CAS01
+ * must not abort a whole batch remittance. An unrecognized code becomes
+ * "unknown" so the adjustment survives (its amount still foots the balance
+ * identity, D6) for the classifier to handle in a later ticket.
  */
-function toGroupCode(raw: string | undefined): GroupCode {
+function toGroupCode(raw: string | undefined): GroupCode | "unknown" {
   if (raw !== undefined && GROUP_CODES.has(raw)) {
     return raw as GroupCode;
   }
-  throw new RangeError(`unknown CAS group code: ${JSON.stringify(raw)}`);
+  return "unknown";
 }
 
 /**
@@ -148,7 +149,7 @@ function readCasAdjustments(segment: FormattedSegment): ParsedAdjustment[] {
 /**
  * Maps the flat 835 segment stream into the typed graph, tracking loop context:
  * a `CLP` opens a claim loop, an `SVC` opens a service-line loop within it, and
- * a `CAS` attaches to whichever loop is currently open — the claim-vs-line
+ * a `CAS` attaches to whichever loop is currently open, the claim-vs-line
  * disambiguation (D2, D11). `TRN02` carries the reassociation trace number.
  */
 export const mapLoops: LoopMapper = (segments) => {
@@ -182,7 +183,6 @@ export const mapLoops: LoopMapper = (segments) => {
           break;
         }
         line = {
-          // SVC01 is a composite; its procedure code is the `"1-1"` component.
           lineNumber: claim.lines.length + 1,
           billed: dollarsToCents(segment["2"] ?? ""),
           paid: dollarsToCents(segment["3"] ?? ""),

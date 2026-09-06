@@ -1,4 +1,5 @@
 import { lex835, mapLoops } from "./adapter/x12";
+import type { ParsedClaim, ParsedLine } from "./adapter/x12";
 import { ZERO_CENTS } from "./money";
 import { aggregate } from "./pipeline/aggregate";
 import { checkBalance } from "./pipeline/balance";
@@ -15,14 +16,49 @@ import type {
 
 /**
  * The single reconcile seam (issue #1). Takes seeded charges plus a raw 835 and
- * returns the whole typed result in one call, with no I/O — the ingest Lambda is
- * a thin wrapper and the tests need no AWS.
+ * returns the whole typed result in one call, with no I/O, so the ingest Lambda
+ * is a thin wrapper and the tests need no AWS.
  *
  * The pipeline is threaded end to end (issue #3): lex the 835, map its loops to
  * the typed graph, then at the service-line grain match each line to a seeded
- * charge, check that it foots, disposition it, and draft its proposed Payment —
+ * charge, check that it foots, disposition it, and draft its proposed Payment,
  * rolling lines up to claims and summing the dashboard aggregates.
  */
+function reconcileLine(
+  parsedClaim: ParsedClaim,
+  parsedLine: ParsedLine,
+  matched: boolean,
+): ReconciledLine {
+  const balance = checkBalance(parsedLine);
+  const disposition = disposeLine({ matched, balances: balance.balances });
+
+  return {
+    claimControlNumber: parsedClaim.claimControlNumber,
+    lineNumber: parsedLine.lineNumber,
+    billed: parsedLine.billed,
+    paid: parsedLine.paid,
+    patientResponsibility: ZERO_CENTS,
+    // Per-`CAS` classification into ClassifiedAdjustment lands with the
+    // classifier in a later ticket; a clean line carries no adjustments.
+    adjustments: [],
+    disposition,
+    ...(balance.warning ? { balanceWarning: balance.warning } : {}),
+  };
+}
+
+/**
+ * A worksheet Payment is drafted only for a line that both matched a seeded
+ * charge and foots. An unmatched or out-of-balance line has nothing to post, so
+ * proposing a payment keyed to it would put a bad line in front of a reviewer.
+ */
+function shouldProposePayment(line: ReconciledLine): boolean {
+  return (
+    line.paid > 0 &&
+    line.disposition !== "unmatched" &&
+    line.disposition !== "out-of-balance"
+  );
+}
+
 export function reconcile(input: ReconcileInput): ReconciliationResult {
   const parsed = mapLoops(lex835(input.raw835));
   const seeded = indexCharges(input.charges);
@@ -36,26 +72,11 @@ export function reconcile(input: ReconcileInput): ReconciliationResult {
     const claimLines: ReconciledLine[] = [];
 
     for (const parsedLine of parsedClaim.lines) {
-      const balance = checkBalance(parsedLine);
-      const disposition = disposeLine({ matched, balances: balance.balances });
-
-      const line: ReconciledLine = {
-        claimControlNumber: parsedClaim.claimControlNumber,
-        lineNumber: parsedLine.lineNumber,
-        billed: parsedLine.billed,
-        paid: parsedLine.paid,
-        patientResponsibility: ZERO_CENTS,
-        // Per-`CAS` classification into ClassifiedAdjustment lands with the
-        // classifier in a later ticket; a clean line carries no adjustments.
-        adjustments: [],
-        disposition,
-        ...(balance.warning ? { balanceWarning: balance.warning } : {}),
-      };
-
+      const line = reconcileLine(parsedClaim, parsedLine, matched);
       claimLines.push(line);
       lines.push(line);
 
-      if (parsedLine.paid > 0) {
+      if (shouldProposePayment(line)) {
         proposedLines.push(
           proposePayment({
             traceNumber: parsed.traceNumber,
