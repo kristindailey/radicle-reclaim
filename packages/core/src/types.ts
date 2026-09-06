@@ -69,8 +69,8 @@ export interface ReconcileInput {
  * a split line carrying a `CO` and a `PR` reason yields two entries.
  */
 export interface ClassifiedAdjustment {
-  /** `CAS` group code. */
-  groupCode: GroupCode;
+  /** `CAS` group code, or `"unknown"` when the payer sent a code outside the closed X12 set (D4). */
+  groupCode: GroupCode | "unknown";
   /** Raw CARC, e.g. `"197"`. */
   carc: string;
   /** CARC decoded to plain English, or the raw code when unknown (D18-scope). */
@@ -126,8 +126,8 @@ export interface ProposedLine {
   lineNumber: number;
   /** Amount, integer cents. */
   amount: Cents;
-  /** Group code, on adjustment lines only. */
-  groupCode?: GroupCode;
+  /** Group code, on adjustment lines only; `"unknown"` for a malformed `CAS01` (D4). */
+  groupCode?: GroupCode | "unknown";
   /** Raw CARC, on adjustment lines only. */
   carc?: string;
 }

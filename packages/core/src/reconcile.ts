@@ -3,9 +3,10 @@ import type { ParsedClaim, ParsedLine } from "./adapter/x12";
 import { ZERO_CENTS } from "./money";
 import { aggregate } from "./pipeline/aggregate";
 import { checkBalance } from "./pipeline/balance";
+import { classifyAdjustment } from "./pipeline/classify";
 import { disposeLine } from "./pipeline/disposition";
 import { indexCharges, isMatched } from "./pipeline/match";
-import { proposePayment } from "./pipeline/propose";
+import { proposeAdjustment, proposePayment } from "./pipeline/propose";
 import type {
   ProposedLine,
   ReconcileInput,
@@ -30,17 +31,21 @@ function reconcileLine(
   matched: boolean,
 ): ReconciledLine {
   const balance = checkBalance(parsedLine);
-  const disposition = disposeLine({ matched, balances: balance.balances });
+  const adjustments = parsedLine.adjustments.map(classifyAdjustment);
+  const disposition = disposeLine({
+    matched,
+    balances: balance.balances,
+    adjustments,
+  });
 
   return {
     claimControlNumber: parsedClaim.claimControlNumber,
     lineNumber: parsedLine.lineNumber,
     billed: parsedLine.billed,
     paid: parsedLine.paid,
+    // Populating the patient-responsibility bucket lands with the PR ticket.
     patientResponsibility: ZERO_CENTS,
-    // Per-`CAS` classification into ClassifiedAdjustment lands with the
-    // classifier in a later ticket; a clean line carries no adjustments.
-    adjustments: [],
+    adjustments,
     disposition,
     ...(balance.warning ? { balanceWarning: balance.warning } : {}),
   };
@@ -56,6 +61,17 @@ function shouldProposePayment(line: ReconciledLine): boolean {
     line.paid > 0 &&
     line.disposition !== "unmatched" &&
     line.disposition !== "out-of-balance"
+  );
+}
+
+/**
+ * A worksheet Adjustment is drafted for each classified `CAS` reason on a line
+ * that placed and foots. An unmatched or out-of-balance line has nothing to
+ * post, so its adjustments are surfaced on the row but not drafted for review.
+ */
+function shouldProposeAdjustments(line: ReconciledLine): boolean {
+  return (
+    line.disposition !== "unmatched" && line.disposition !== "out-of-balance"
   );
 }
 
@@ -85,6 +101,19 @@ export function reconcile(input: ReconcileInput): ReconciliationResult {
             amount: parsedLine.paid,
           }),
         );
+      }
+
+      if (shouldProposeAdjustments(line)) {
+        for (const adjustment of line.adjustments) {
+          proposedLines.push(
+            proposeAdjustment({
+              traceNumber: parsed.traceNumber,
+              claimControlNumber: parsedClaim.claimControlNumber,
+              lineNumber: parsedLine.lineNumber,
+              adjustment,
+            }),
+          );
+        }
       }
     }
 
