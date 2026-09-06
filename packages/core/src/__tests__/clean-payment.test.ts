@@ -7,7 +7,7 @@ import type { Charge } from "../types";
 
 /**
  * The tracer bullet (issue #3): the whole pipeline threaded end-to-end for the
- * simplest outcome — a clean payment where paid equals billed. Every assertion
+ * simplest outcome, a clean payment where paid equals billed. Every assertion
  * goes through the {@link reconcile} seam; nothing reaches into the adapter,
  * matcher, or balancer directly.
  */

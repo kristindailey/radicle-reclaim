@@ -2,7 +2,7 @@ import type { ParsedLine } from "../adapter/x12";
 
 /**
  * The balancer (D6): an 835 self-foots. At the service-line grain the identity
- * is **billed = paid + Σ CAS**, summing every line-level `CAS` amount — patient
+ * is **billed = paid + Σ CAS**, summing every line-level `CAS` amount. Patient
  * responsibility (group `PR`) is one such adjustment and counts toward Σ like any
  * other, so it is not added a second time. A clean line (no `CAS`, paid = billed)
  * foots trivially; a line that does not foot surfaces a warning and becomes an

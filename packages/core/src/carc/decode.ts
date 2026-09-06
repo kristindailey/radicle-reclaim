@@ -3,8 +3,8 @@ import carcCodes from "./carcCodes.json";
 /**
  * CARC decode: a JSON lookup of the ~20 most common Claim Adjustment Reason
  * Codes (not the national ~800, D15). A code outside the lookup surfaces its raw
- * value rather than throwing (issue #1, story 19) — an unknown code must never
- * break a run.
+ * value rather than throwing (issue #1, story 19), so an unknown code never
+ * breaks a run.
  */
 
 const CARC_TABLE: Readonly<Record<string, string>> = carcCodes;
