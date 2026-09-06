@@ -2,7 +2,11 @@ import { lex835, mapLoops } from "./adapter/x12";
 import type { ParsedClaim, ParsedLine } from "./adapter/x12";
 import { cents } from "./money";
 import { aggregate } from "./pipeline/aggregate";
-import { checkBalance } from "./pipeline/balance";
+import {
+  checkClaimBalance,
+  checkLineBalance,
+  checkTransactionBalance,
+} from "./pipeline/balance";
 import { classifyAdjustment, sumClassified } from "./pipeline/classify";
 import { disposeLine } from "./pipeline/disposition";
 import { indexCharges, isMatched } from "./pipeline/match";
@@ -30,7 +34,7 @@ function reconcileLine(
   parsedLine: ParsedLine,
   matched: boolean,
 ): ReconciledLine {
-  const balance = checkBalance(parsedLine);
+  const balance = checkLineBalance(parsedLine);
   const adjustments = parsedLine.adjustments.map(classifyAdjustment);
   const disposition = disposeLine({
     matched,
@@ -57,27 +61,22 @@ function reconcileLine(
 }
 
 /**
- * A worksheet Payment is drafted only for a line that both matched a seeded
- * charge and foots. An unmatched or out-of-balance line has nothing to post, so
- * proposing a payment keyed to it would put a bad line in front of a reviewer.
+ * A worksheet Payment is drafted for any matched line with a paid amount. An
+ * unmatched line has no seeded charge to post against, so it drafts nothing. An
+ * out-of-balance line still drafts, so the row is populated for review (D19); its
+ * balance warning is what flags it, not a missing draft.
  */
 function shouldProposePayment(line: ReconciledLine): boolean {
-  return (
-    line.paid > 0 &&
-    line.disposition !== "unmatched" &&
-    line.disposition !== "out-of-balance"
-  );
+  return line.paid > 0 && line.disposition !== "unmatched";
 }
 
 /**
- * A worksheet Adjustment is drafted for each classified `CAS` reason on a line
- * that placed and foots. An unmatched or out-of-balance line has nothing to
- * post, so its adjustments are surfaced on the row but not drafted for review.
+ * A worksheet Adjustment is drafted for each classified `CAS` reason on a matched
+ * line, an out-of-balance one included (D19). An unmatched line has nothing to
+ * post, so its adjustments are surfaced on the row but not drafted.
  */
 function shouldProposeAdjustments(line: ReconciledLine): boolean {
-  return (
-    line.disposition !== "unmatched" && line.disposition !== "out-of-balance"
-  );
+  return line.disposition !== "unmatched";
 }
 
 export function reconcile(input: ReconcileInput): ReconciliationResult {
@@ -122,14 +121,27 @@ export function reconcile(input: ReconcileInput): ReconciliationResult {
       }
     }
 
+    const claimBalance = checkClaimBalance(parsedClaim);
     claims.push({
       claimControlNumber: parsedClaim.claimControlNumber,
       ...(parsedClaim.payerControlNumber
         ? { payerControlNumber: parsedClaim.payerControlNumber }
         : {}),
       lines: claimLines,
+      ...(claimBalance.warning ? { balanceWarning: claimBalance.warning } : {}),
     });
   }
 
-  return { claims, lines, proposedLines, aggregates: aggregate(lines) };
+  const transactionBalance = checkTransactionBalance(
+    parsed.transactionPaid,
+    parsed.claims,
+  );
+
+  return {
+    claims,
+    lines,
+    proposedLines,
+    aggregates: aggregate(lines),
+    transactionBalance,
+  };
 }

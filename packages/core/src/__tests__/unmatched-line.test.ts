@@ -74,6 +74,16 @@ describe("reconcile: unmatched line, end to end", () => {
     expect(result.aggregates.outOfBalanceCount).toBe(0);
   });
 
+  it("keeps its non-footing recoverable dollars out of dollars at risk (D19)", () => {
+    const result = run();
+
+    // CLAIM999 carries a recoverable `PI` 197 but its amounts do not foot, so its
+    // dollars stay out of the hero figure even though its headline is unmatched,
+    // not out-of-balance. The only other line is a clean payment, so the figure is
+    // zero.
+    expect(result.aggregates.dollarsAtRisk).toBe(0);
+  });
+
   it("captures CLP07 on the result for resubmission without using it as the join key", () => {
     const result = run();
 

@@ -1,6 +1,6 @@
 import { X12parser, type FormattedSegment } from "x12-parser";
 
-import { dollarsToCents, type Cents } from "../money";
+import { dollarsToCents, ZERO_CENTS, type Cents } from "../money";
 import type { GroupCode } from "../types";
 
 /**
@@ -50,6 +50,11 @@ export interface Parsed835 {
    * same remittance, and higher-entropy than the per-transaction `ST02`.
    */
   traceNumber: string;
+  /**
+   * The transaction's total actual payment amount (`BPR02`), integer cents. The
+   * whole-file total the balancer ties to the sum of claim payments (D6).
+   */
+  transactionPaid: Cents;
   claims: ParsedClaim[];
 }
 
@@ -154,12 +159,17 @@ function readCasAdjustments(segment: FormattedSegment): ParsedAdjustment[] {
  */
 export const mapLoops: LoopMapper = (segments) => {
   let traceNumber = "";
+  let transactionPaid: Cents = ZERO_CENTS;
   const claims: ParsedClaim[] = [];
   let claim: ParsedClaim | undefined;
   let line: ParsedLine | undefined;
 
   for (const segment of segments) {
     switch (segment.name) {
+      case "BPR": {
+        transactionPaid = dollarsToCents(segment["2"] ?? "");
+        break;
+      }
       case "TRN": {
         traceNumber = segment["2"] ?? "";
         break;
@@ -203,5 +213,5 @@ export const mapLoops: LoopMapper = (segments) => {
     }
   }
 
-  return { traceNumber, claims };
+  return { traceNumber, transactionPaid, claims };
 };

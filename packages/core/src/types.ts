@@ -117,6 +117,19 @@ export interface ReconciledClaim {
   /** Payer's own control number, `CLP07`, captured for resubmission, never the join key (D3). */
   payerControlNumber?: string;
   lines: ReconciledLine[];
+  /** Present only when the claim's amounts do not foot at the claim grain (D6). */
+  balanceWarning?: string;
+}
+
+/**
+ * Whole-transaction balance (D6): the `BPR` total (`BPR02`) tied to the sum of
+ * claim payments, catching a file-wide imbalance the per-line and per-claim
+ * checks cannot see.
+ */
+export interface TransactionBalance {
+  balances: boolean;
+  /** Present only when the `BPR` total does not tie to the sum of claim payments. */
+  warning?: string;
 }
 
 /**
@@ -169,4 +182,6 @@ export interface ReconciliationResult {
   proposedLines: ProposedLine[];
   /** Dashboard figures. */
   aggregates: Aggregates;
+  /** Whole-transaction balance: the `BPR` total vs the sum of claim payments (D6). */
+  transactionBalance: TransactionBalance;
 }
