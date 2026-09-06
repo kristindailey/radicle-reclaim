@@ -4,8 +4,8 @@
     // Node 20 runtime target (nodejs20.x Lambda, D20).
     "target": "ES2022",
     "lib": ["ES2022"],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "types": ["node", "jest"],
 
     // Strict end to end (D20).
