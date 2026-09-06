@@ -1,6 +1,6 @@
 import { X12parser, type FormattedSegment } from "x12-parser";
 
-import type { Cents } from "../money";
+import { dollarsToCents, type Cents } from "../money";
 import type { GroupCode } from "../types";
 
 /**
@@ -8,10 +8,6 @@ import type { GroupCode } from "../types";
  * core owns the mapping from raw segments into the typed 835 graph below,
  * because the claim-loop-vs-line-loop `CAS` disambiguation is domain logic, not
  * boilerplate.
- *
- * Scaffold only (issue #2): this file stands up the boundary and its types so
- * the shim type-checks. The {@link LoopMapper} implementation — the actual
- * segment-to-graph mapping — lands in ticket 3. No mapping logic here yet.
  */
 
 /** A `CAS` adjustment on the raw 835 graph, before classification. */
@@ -47,15 +43,20 @@ export interface ParsedClaim {
 
 /** The typed 835 graph the loop-mapper produces from raw segments. */
 export interface Parsed835 {
-  /** The 835 transaction control number (`ST02`). */
-  transactionControlNumber: string;
+  /**
+   * The reassociation trace number (`TRN02`) — the remittance-wide EFT/check
+   * trace that identifies this 835. Serves as the "835 control number" component
+   * of a proposed line's idempotency key (D12): stable across a redelivery of the
+   * same remittance, and higher-entropy than the per-transaction `ST02`.
+   */
+  traceNumber: string;
   claims: ParsedClaim[];
 }
 
 /**
  * The 835 loop-mapper seam (D11): raw lexed segments to the typed 835 graph,
  * disambiguating the claim-loop `CAS` from the line-loop `CAS`. The core owns
- * this mapping; ticket 3 implements it.
+ * this mapping.
  */
 export type LoopMapper = (segments: FormattedSegment[]) => Parsed835;
 
@@ -63,3 +64,144 @@ export type LoopMapper = (segments: FormattedSegment[]) => Parsed835;
 export function createParser(): X12parser {
   return new X12parser();
 }
+
+/** A `CAS` segment carries up to six repetitions of (CARC, amount[, quantity]). */
+const CAS_REPETITIONS = 6;
+/** Elements per `CAS` repetition: CARC, amount, quantity. */
+const CAS_STRIDE = 3;
+
+/** The closed set of X12 `CAS` adjustment group codes (D4). */
+const GROUP_CODES: ReadonlySet<string> = new Set<GroupCode>([
+  "CO",
+  "PR",
+  "PI",
+  "OA",
+]);
+
+/**
+ * Validates a `CAS01` group code into the {@link GroupCode} union. The four codes
+ * are a closed set, so a value outside them is malformed X12, not an expected gap
+ * (unlike an unknown CARC, which decodes to its raw value) — a billing core fails
+ * loud on it rather than miscount money.
+ */
+function toGroupCode(raw: string | undefined): GroupCode {
+  if (raw !== undefined && GROUP_CODES.has(raw)) {
+    return raw as GroupCode;
+  }
+  throw new RangeError(`unknown CAS group code: ${JSON.stringify(raw)}`);
+}
+
+/**
+ * Lexes a raw X12 835 into its flat segment stream. `x12-parser` is a Node
+ * Transform; feeding it the whole payload and draining the readable side runs
+ * synchronously here (its transform calls back synchronously), so the seam stays
+ * a plain function with no I/O. Empty input yields no segments, and the trailing
+ * empty segment a terminating newline produces is dropped.
+ */
+export function lex835(raw: Buffer | string): FormattedSegment[] {
+  const text = typeof raw === "string" ? raw : raw.toString("ascii");
+  if (text.trim() === "") {
+    return [];
+  }
+
+  const parser = createParser();
+  let failure: Error | undefined;
+  parser.on("error", (error: Error) => {
+    failure = error;
+  });
+
+  parser.write(text);
+  parser.end();
+
+  const segments: FormattedSegment[] = [];
+  let segment: FormattedSegment | null;
+  while ((segment = parser.read() as FormattedSegment | null) !== null) {
+    if (segment.name) {
+      segments.push(segment);
+    }
+  }
+
+  if (failure) {
+    throw failure;
+  }
+  return segments;
+}
+
+/** Reads the `CAS` repetitions off one `CAS` segment into typed adjustments. */
+function readCasAdjustments(segment: FormattedSegment): ParsedAdjustment[] {
+  const groupCode = toGroupCode(segment["1"]);
+  const adjustments: ParsedAdjustment[] = [];
+
+  for (let repetition = 0; repetition < CAS_REPETITIONS; repetition++) {
+    const base = repetition * CAS_STRIDE;
+    const carc = segment[`${base + 2}`];
+    const amount = segment[`${base + 3}`];
+    if (!carc) {
+      continue;
+    }
+    adjustments.push({ groupCode, carc, amount: dollarsToCents(amount ?? "") });
+  }
+
+  return adjustments;
+}
+
+/**
+ * Maps the flat 835 segment stream into the typed graph, tracking loop context:
+ * a `CLP` opens a claim loop, an `SVC` opens a service-line loop within it, and
+ * a `CAS` attaches to whichever loop is currently open — the claim-vs-line
+ * disambiguation (D2, D11). `TRN02` carries the reassociation trace number.
+ */
+export const mapLoops: LoopMapper = (segments) => {
+  let traceNumber = "";
+  const claims: ParsedClaim[] = [];
+  let claim: ParsedClaim | undefined;
+  let line: ParsedLine | undefined;
+
+  for (const segment of segments) {
+    switch (segment.name) {
+      case "TRN": {
+        traceNumber = segment["2"] ?? "";
+        break;
+      }
+      case "CLP": {
+        line = undefined;
+        claim = {
+          claimControlNumber: segment["1"] ?? "",
+          payerControlNumber: segment["7"] || undefined,
+          billed: dollarsToCents(segment["3"] ?? ""),
+          paid: dollarsToCents(segment["4"] ?? ""),
+          patientResponsibility: dollarsToCents(segment["5"] ?? ""),
+          adjustments: [],
+          lines: [],
+        };
+        claims.push(claim);
+        break;
+      }
+      case "SVC": {
+        if (!claim) {
+          break;
+        }
+        line = {
+          // SVC01 is a composite; its procedure code is the `"1-1"` component.
+          lineNumber: claim.lines.length + 1,
+          billed: dollarsToCents(segment["2"] ?? ""),
+          paid: dollarsToCents(segment["3"] ?? ""),
+          adjustments: [],
+        };
+        claim.lines.push(line);
+        break;
+      }
+      case "CAS": {
+        const target = line ?? claim;
+        if (target) {
+          target.adjustments.push(...readCasAdjustments(segment));
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  return { traceNumber, claims };
+};
