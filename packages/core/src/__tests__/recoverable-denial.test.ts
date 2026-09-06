@@ -84,6 +84,9 @@ describe("reconcile: recoverable denial, end to end", () => {
     // The hero figure is CLAIM004's 197 alone: the CO-45 short-pay and the
     // non-actionable PI-253 sequestration reduction both stay out of it.
     expect(result.aggregates.dollarsAtRisk).toBe(25_000);
+    // The contractual total is the CO-45 write-down only; the PI-253 "other"
+    // reason is not contractual and stays out.
+    expect(result.aggregates.totalContractual).toBe(10_000);
   });
 
   it("keeps the CO short-pay contractual and out of dollars at risk", () => {
@@ -94,15 +97,15 @@ describe("reconcile: recoverable denial, end to end", () => {
     expect(line?.adjustments[0]?.classification).toBe("contractual");
   });
 
-  it("does not treat a non-actionable CARC in an actionable group as recoverable", () => {
+  it("classifies a non-actionable CARC in an actionable group as other, not recoverable", () => {
     const result = run();
 
     const line = result.lines.find((l) => l.claimControlNumber === "CLAIM006");
     const adjustment = line?.adjustments[0];
     expect(adjustment?.groupCode).toBe("PI");
     expect(adjustment?.carc).toBe("253");
-    expect(adjustment?.classification).not.toBe("recoverable-denial");
-    expect(line?.disposition).not.toBe("recoverable-denial");
+    expect(adjustment?.classification).toBe("other");
+    expect(line?.disposition).toBe("other-adjustment");
   });
 
   it("keys the recoverable-denial Adjustment deterministically to its CAS reason", () => {

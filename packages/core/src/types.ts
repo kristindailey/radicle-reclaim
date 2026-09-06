@@ -9,21 +9,30 @@ import type { Cents } from "./money";
 /** X12 `CAS` adjustment group codes. The first-order classification signal (D4). */
 export type GroupCode = "CO" | "PR" | "PI" | "OA";
 
-/** Per-`CAS`-reason classification, underneath the line's headline disposition (D17). */
+/**
+ * Per-`CAS`-reason classification (D4), underneath the line's headline
+ * disposition (D17). `other` is a payer-side adjustment that is none of the three
+ * named buckets: not a `CO` write-down, not `PR`, and not pursuable - a
+ * non-actionable reason in an actionable group, or a malformed group. Kept out of
+ * both the contractual total and dollars at risk.
+ */
 export type AdjustmentClassification =
   | "contractual"
   | "patient-responsibility"
-  | "recoverable-denial";
+  | "recoverable-denial"
+  | "other";
 
 /**
  * The single headline outcome of one reconciled service line, chosen by
- * precedence (D17): highest-ranking first.
+ * precedence (D17): highest-ranking first. `other-adjustment` sits just above
+ * `clean-payment`, the headline for a line adjusted only by `other` reasons.
  */
 export type Disposition =
   | "unmatched"
   | "out-of-balance"
   | "recoverable-denial"
   | "contractual-adjustment"
+  | "other-adjustment"
   | "clean-payment";
 
 /** A drafted worksheet line is one of two record types (Fiscal Periods model, D5). */

@@ -29,23 +29,26 @@ const ACTIONABLE_CARCS: ReadonlySet<string> = new Set<string>(["197"]);
 
 /**
  * The classifier (D4): each `CAS` reason is classified on its own, group code
- * first. `PR` is patient responsibility, straight off the group. A reason is a
- * recoverable denial only when it lands in an actionable group *and* carries an
- * actionable CARC; everything else (a `CO` write-down, a non-actionable reason in
- * an actionable group, a malformed group) is a non-recoverable contractual
- * adjustment, kept out of dollars at risk.
+ * first. `CO` is a contractual write-down and `PR` is patient responsibility,
+ * both straight off the group. A reason is a recoverable denial only when it
+ * lands in an actionable group *and* carries an actionable CARC. Anything left (a
+ * non-actionable reason in an actionable group, or a malformed group) is `other`:
+ * a payer-side adjustment that is neither contractual nor pursuable.
  */
 function classify(
   groupCode: ParsedGroupCode,
   carc: string,
 ): AdjustmentClassification {
+  if (groupCode === "CO") {
+    return "contractual";
+  }
   if (groupCode === "PR") {
     return "patient-responsibility";
   }
   if (ACTIONABLE_GROUPS.has(groupCode) && ACTIONABLE_CARCS.has(carc)) {
     return "recoverable-denial";
   }
-  return "contractual";
+  return "other";
 }
 
 /**
