@@ -197,6 +197,8 @@ export interface LogFigures {
 
 /** The whole result the seam returns in one call (issue #1). */
 export interface ReconciliationResult {
+  /** The 835 control number (reassociation trace, `TRN02`), surfaced so the persistence edge keys on it without re-parsing the X12 (D12). */
+  controlNumber: string;
   /** Reconciled claims, rolled up from lines. */
   claims: ReconciledClaim[];
   /** The flat service-line grain across all claims. */

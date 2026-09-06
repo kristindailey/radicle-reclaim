@@ -169,6 +169,7 @@ export function reconcile(input: ReconcileInput): ReconciliationResult {
   const aggregates = aggregate(claims);
 
   return {
+    controlNumber: parsed.traceNumber,
     claims,
     lines,
     proposedLines,

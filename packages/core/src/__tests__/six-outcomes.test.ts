@@ -148,6 +148,12 @@ describe("reconcile: full six-outcome fixture, end to end", () => {
     expect(proposed).toHaveLength(0);
   });
 
+  it("surfaces the 835 control number (TRN02) so the persistence edge can key on it", () => {
+    const result = run();
+
+    expect(result.controlNumber).toBe("0000000009");
+  });
+
   it("surfaces the structured log figures on the result without recomputing (D15)", () => {
     const result = run();
 
