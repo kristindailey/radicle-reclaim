@@ -10,7 +10,12 @@ import {
 import { classifyAdjustment, sumClassified } from "./pipeline/classify";
 import { disposeLine } from "./pipeline/disposition";
 import { indexCharges, isMatched } from "./pipeline/match";
-import { proposeAdjustment, proposePayment } from "./pipeline/propose";
+import {
+  CLAIM_LEVEL_LINE,
+  proposeAdjustment,
+  proposePayment,
+  reasonTokens,
+} from "./pipeline/propose";
 import type {
   ProposedLine,
   ReconcileInput,
@@ -108,17 +113,39 @@ export function reconcile(input: ReconcileInput): ReconciliationResult {
       }
 
       if (shouldProposeAdjustments(line)) {
-        for (const adjustment of line.adjustments) {
+        const tokens = reasonTokens(line.adjustments);
+        line.adjustments.forEach((adjustment, index) => {
           proposedLines.push(
             proposeAdjustment({
               traceNumber: parsed.traceNumber,
               claimControlNumber: parsedClaim.claimControlNumber,
               lineNumber: parsedLine.lineNumber,
               adjustment,
+              reasonToken: tokens[index],
             }),
           );
-        }
+        });
       }
+    }
+
+    // Claim-level `CAS` (D2): reasons carried on the claim header, not any one
+    // service line, classified like a line's. A matched claim drafts an Adjustment
+    // for each, keyed on the claim-level sentinel line; an unmatched claim surfaces
+    // them on the claim but drafts nothing (mirrors an unmatched line).
+    const claimAdjustments = parsedClaim.adjustments.map(classifyAdjustment);
+    if (matched) {
+      const tokens = reasonTokens(claimAdjustments);
+      claimAdjustments.forEach((adjustment, index) => {
+        proposedLines.push(
+          proposeAdjustment({
+            traceNumber: parsed.traceNumber,
+            claimControlNumber: parsedClaim.claimControlNumber,
+            lineNumber: CLAIM_LEVEL_LINE,
+            adjustment,
+            reasonToken: tokens[index],
+          }),
+        );
+      });
     }
 
     const claimBalance = checkClaimBalance(parsedClaim);
@@ -127,7 +154,9 @@ export function reconcile(input: ReconcileInput): ReconciliationResult {
       ...(parsedClaim.payerControlNumber
         ? { payerControlNumber: parsedClaim.payerControlNumber }
         : {}),
+      matched,
       lines: claimLines,
+      adjustments: claimAdjustments,
       ...(claimBalance.warning ? { balanceWarning: claimBalance.warning } : {}),
     });
   }
@@ -137,7 +166,7 @@ export function reconcile(input: ReconcileInput): ReconciliationResult {
     parsed.claims,
   );
 
-  const aggregates = aggregate(lines);
+  const aggregates = aggregate(claims);
 
   return {
     claims,
