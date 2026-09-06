@@ -3,10 +3,11 @@ import type { ClassifiedAdjustment, Disposition } from "../types";
 /**
  * The line's single headline disposition, chosen by precedence (D17):
  * **unmatched → out-of-balance → recoverable denial → contractual adjustment →
- * clean payment**. The structural outcomes (unmatched, out-of-balance) win
- * first; below them the disposition is the highest-ranking of the line's
- * per-`CAS` classifications, so a split line still shows one headline while its
- * dollars land in the right buckets underneath.
+ * other adjustment → clean payment**. The structural outcomes (unmatched,
+ * out-of-balance) win first; below them the disposition is the highest-ranking of
+ * the line's per-`CAS` classifications, so a split line still shows one headline
+ * while its dollars land in the right buckets underneath. `other-adjustment`
+ * extends D17's chain for a line adjusted only by non-recoverable `other` reasons.
  */
 export function disposeLine(input: {
   matched: boolean;
@@ -24,6 +25,9 @@ export function disposeLine(input: {
   }
   if (input.adjustments.some((adj) => adj.classification === "contractual")) {
     return "contractual-adjustment";
+  }
+  if (input.adjustments.some((adj) => adj.classification === "other")) {
+    return "other-adjustment";
   }
   return "clean-payment";
 }

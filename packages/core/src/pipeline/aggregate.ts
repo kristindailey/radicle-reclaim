@@ -19,9 +19,10 @@ function sumByClassification(
 /**
  * The dashboard aggregates (D13), all in integer cents: **total remittance**
  * (billed across the remittance), **total paid**, **total contractual** (group
- * `CO` write-downs), and the disposition counts. The remaining classification
- * figures (patient responsibility, dollars at risk) land with their tickets and
- * stay zero here.
+ * `CO` write-downs), **dollars at risk** (the recoverable-denial hero figure,
+ * D4), and the disposition counts. Patient responsibility lands with its own
+ * ticket (D18) and stays zero; excluding out-of-balance lines from dollars at
+ * risk (D19) lands with the out-of-balance ticket.
  */
 export function aggregate(lines: ReconciledLine[]): Aggregates {
   return {
@@ -29,7 +30,7 @@ export function aggregate(lines: ReconciledLine[]): Aggregates {
     totalPaid: cents(lines.reduce((total, line) => total + line.paid, 0)),
     totalContractual: cents(sumByClassification(lines, "contractual")),
     totalPatientResponsibility: ZERO_CENTS,
-    dollarsAtRisk: ZERO_CENTS,
+    dollarsAtRisk: cents(sumByClassification(lines, "recoverable-denial")),
     unmatchedCount: lines.filter((line) => line.disposition === "unmatched")
       .length,
     outOfBalanceCount: lines.filter(
