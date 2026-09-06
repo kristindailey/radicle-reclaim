@@ -1,0 +1,3 @@
+name: reclaim-infra
+runtime: nodejs
+description: Pulumi TypeScript stack for Reclaim - S3 ingest, Lambda, DynamoDB, AppSync.
