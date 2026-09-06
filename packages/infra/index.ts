@@ -2,6 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 
 import { ATTR, GSI1 } from "./src/persistence";
+import { GRAPHQL_SCHEMA } from "./src/read/graphql";
 
 // The single-table store (D12). One table holds every grain of a reconciled 835,
 // partitioned by claim (PK) and sorted by grain (SK). GSI1 partitions the
@@ -115,3 +116,131 @@ new aws.s3.BucketNotification(
   },
   { dependsOn: [allowS3] },
 );
+
+// The read Lambda that backs the AppSync data source (issue #26, D22). Its own
+// role, read-only on the one table and its index: Scan (the reconciliation table
+// and the dashboard's scan-derived figures) and Query (the recoverable-denial GSI
+// and a claim's proposed lines). No write, no S3: the read path touches nothing else.
+const readLambdaRole = new aws.iam.Role("read-lambda", {
+  assumeRolePolicy: JSON.stringify({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Principal: { Service: "lambda.amazonaws.com" },
+        Action: "sts:AssumeRole",
+      },
+    ],
+  }),
+});
+
+new aws.iam.RolePolicyAttachment("read-lambda-logs", {
+  role: readLambdaRole.name,
+  policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+});
+
+new aws.iam.RolePolicy("read-lambda-access", {
+  role: readLambdaRole.id,
+  policy: table.arn.apply((tableArn) =>
+    JSON.stringify({
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Action: ["dynamodb:Scan", "dynamodb:Query"],
+          Resource: [tableArn, `${tableArn}/index/*`],
+        },
+      ],
+    }),
+  ),
+});
+
+// The bundled read edge (`pnpm --filter infra bundle` writes dist-lambda-read/
+// read.js). AppSync's VTL request template invokes `read.handler` with the field
+// name and arguments; the handler routes to the pure resolvers.
+const readLambda = new aws.lambda.Function("read", {
+  runtime: "nodejs20.x",
+  role: readLambdaRole.arn,
+  handler: "read.handler",
+  code: new pulumi.asset.FileArchive("dist-lambda-read"),
+  timeout: 30,
+  environment: { variables: { RECLAIM_TABLE_NAME: table.name } },
+});
+
+// API-key auth to reach green fast; the Cognito user-pool authorizer is the
+// timeboxed upgrade (D22). API_KEY is the default authorizer for every field.
+const api = new aws.appsync.GraphQLApi("reclaim", {
+  authenticationType: "API_KEY",
+  schema: GRAPHQL_SCHEMA,
+});
+
+/** The GraphQL endpoint the dashboard queries. */
+export const graphqlApiUrl = api.uris["GRAPHQL"];
+
+const apiKey = new aws.appsync.ApiKey("reclaim", { apiId: api.id });
+
+/** The API key the dashboard sends as `x-api-key`. Secret: read it with `--show-secrets`. */
+export const graphqlApiKey = pulumi.secret(apiKey.key);
+
+// The role AppSync assumes to invoke the read Lambda data source. Least
+// privilege: invoke that one function, nothing else.
+const dataSourceRole = new aws.iam.Role("read-datasource", {
+  assumeRolePolicy: JSON.stringify({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Principal: { Service: "appsync.amazonaws.com" },
+        Action: "sts:AssumeRole",
+      },
+    ],
+  }),
+});
+
+new aws.iam.RolePolicy("read-datasource-invoke", {
+  role: dataSourceRole.id,
+  policy: readLambda.arn.apply((functionArn) =>
+    JSON.stringify({
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Action: ["lambda:InvokeFunction"],
+          Resource: functionArn,
+        },
+      ],
+    }),
+  ),
+});
+
+const readDataSource = new aws.appsync.DataSource("read", {
+  apiId: api.id,
+  type: "AWS_LAMBDA",
+  serviceRoleArn: dataSourceRole.arn,
+  lambdaConfig: { functionArn: readLambda.arn },
+});
+
+// One Lambda data source serves all three fields; the request template forwards
+// the resolved field name and arguments as the invoke payload the handler routes
+// on, and the response template passes the handler's result straight through.
+const REQUEST_TEMPLATE = `{
+  "version": "2017-02-28",
+  "operation": "Invoke",
+  "payload": {
+    "field": "$context.info.fieldName",
+    "arguments": $utils.toJson($context.arguments)
+  }
+}`;
+
+const RESPONSE_TEMPLATE = "$utils.toJson($context.result)";
+
+for (const field of ["reconciledLines", "dashboard", "proposedLines"]) {
+  new aws.appsync.Resolver(`read-${field}`, {
+    apiId: api.id,
+    type: "Query",
+    field,
+    dataSource: readDataSource.name,
+    requestTemplate: REQUEST_TEMPLATE,
+    responseTemplate: RESPONSE_TEMPLATE,
+  });
+}

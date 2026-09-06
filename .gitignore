@@ -9,6 +9,7 @@ STANDARDS.md
 node_modules/
 dist/
 dist-lambda/
+dist-lambda-read/
 coverage/
 *.tsbuildinfo
 
