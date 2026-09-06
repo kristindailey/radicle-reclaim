@@ -1,11 +1,10 @@
 import type { Cents } from "../money";
-import type { ProposedLine } from "../types";
+import type { ClassifiedAdjustment, ProposedLine } from "../types";
 
 /**
  * The proposer (D5): a reconciled line drafts one Payment (when paid) plus one
- * Adjustment per `CAS` reason, all in a pending-review state a human approves,
- * so the feeder never auto-posts. This tracer bullet drafts the Payment; the
- * per-`CAS` Adjustment lines arrive with the classifier in a later ticket.
+ * Adjustment per `CAS` group+reason, all in a pending-review state a human
+ * approves, so the feeder never auto-posts.
  *
  * Each key is derived deterministically from (835 control number, claim control
  * number, line number, `CAS` reason) (D12), so an at-least-once redelivery or
@@ -43,5 +42,50 @@ export function proposePayment(input: {
     claimControlNumber: input.claimControlNumber,
     lineNumber: input.lineNumber,
     amount: input.amount,
+  };
+}
+
+/**
+ * An Adjustment's key ends in its `CAS` reason (`<group><carc>`, D12), so a line
+ * carrying both a `CO` and a `PR` adjustment drafts two distinct keys that never
+ * collide, and each upserts on redelivery.
+ */
+export function adjustmentKey(
+  traceNumber: string,
+  claimControlNumber: string,
+  lineNumber: number,
+  groupCode: string,
+  carc: string,
+): string {
+  return [
+    traceNumber,
+    `CLAIM#${claimControlNumber}`,
+    `LINE#${lineNumber}`,
+    `${groupCode}${carc}`,
+  ].join("|");
+}
+
+export function proposeAdjustment(input: {
+  traceNumber: string;
+  claimControlNumber: string;
+  lineNumber: number;
+  adjustment: ClassifiedAdjustment;
+}): ProposedLine {
+  const { adjustment } = input;
+  return {
+    idempotencyKey: adjustmentKey(
+      input.traceNumber,
+      input.claimControlNumber,
+      input.lineNumber,
+      adjustment.groupCode,
+      adjustment.carc,
+    ),
+    kind: "adjustment",
+    status: "pending-review",
+    claimControlNumber: input.claimControlNumber,
+    lineNumber: input.lineNumber,
+    amount: adjustment.amount,
+    groupCode: adjustment.groupCode,
+    carc: adjustment.carc,
   };
 }
