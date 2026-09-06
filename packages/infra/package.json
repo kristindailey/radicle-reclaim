@@ -8,12 +8,16 @@
     "node": ">=20"
   },
   "scripts": {
+    "pretest": "pnpm --filter core build",
     "test": "jest",
+    "pretypecheck": "pnpm --filter core build",
     "typecheck": "tsc --noEmit",
+    "prebuild": "pnpm --filter core build",
     "build": "tsc"
   },
   "dependencies": {
-    "@pulumi/pulumi": "^3.261.0"
+    "@pulumi/pulumi": "^3.261.0",
+    "core": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
