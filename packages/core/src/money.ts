@@ -24,3 +24,34 @@ export function cents(value: number): Cents {
 
 /** Zero cents. */
 export const ZERO_CENTS: Cents = cents(0);
+
+/** Adds cents values, staying in the integer-cents domain. */
+export function addCents(...values: Cents[]): Cents {
+  return cents(values.reduce((total, value) => total + value, 0));
+}
+
+/**
+ * Parses an X12 monetary amount (dollars-with-decimals, e.g. `"500"` or
+ * `"12.34"`) to integer cents without any float arithmetic (D7): the whole and
+ * fractional parts are combined as integers, so `"12.34"` becomes `1234`, never
+ * `12.34 * 100`. An empty element parses to zero; a leading `-` is preserved.
+ */
+export function dollarsToCents(raw: string): Cents {
+  const trimmed = raw.trim();
+  if (trimmed === "") {
+    return ZERO_CENTS;
+  }
+
+  const negative = trimmed.startsWith("-");
+  const unsigned = negative ? trimmed.slice(1) : trimmed;
+  const [whole = "", fraction = ""] = unsigned.split(".");
+
+  if (!/^\d*$/.test(whole) || !/^\d*$/.test(fraction)) {
+    throw new RangeError(`not a monetary amount: ${JSON.stringify(raw)}`);
+  }
+
+  // Pad/truncate the fraction to exactly two digits (currency scale).
+  const fractionCents = Number(`${fraction}00`.slice(0, 2));
+  const magnitude = Number(whole || "0") * 100 + fractionCents;
+  return cents(negative ? -magnitude : magnitude);
+}

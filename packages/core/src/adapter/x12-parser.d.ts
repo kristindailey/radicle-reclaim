@@ -15,7 +15,10 @@ declare module "x12-parser" {
 
   /**
    * A parsed segment emitted by {@link X12parser}. `name` is the segment id
-   * (e.g. `"CLP"`); positional elements are keyed `CLP01`, `CLP02`, ... .
+   * (e.g. `"CLP"`); positional elements are keyed by their 1-based position as a
+   * bare string — `"1"`, `"2"`, ... (so `CLP01` is `segment["1"]`) — and
+   * composite components are keyed `"<element>-<component>"`, e.g. the procedure
+   * code in `SVC01` is `segment["1-1"]`.
    */
   export interface FormattedSegment {
     /** Segment id, e.g. `"CLP"`. */
