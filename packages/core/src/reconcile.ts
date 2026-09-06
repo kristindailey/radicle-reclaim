@@ -1,9 +1,9 @@
 import { lex835, mapLoops } from "./adapter/x12";
 import type { ParsedClaim, ParsedLine } from "./adapter/x12";
-import { ZERO_CENTS } from "./money";
+import { cents } from "./money";
 import { aggregate } from "./pipeline/aggregate";
 import { checkBalance } from "./pipeline/balance";
-import { classifyAdjustment } from "./pipeline/classify";
+import { classifyAdjustment, sumClassified } from "./pipeline/classify";
 import { disposeLine } from "./pipeline/disposition";
 import { indexCharges, isMatched } from "./pipeline/match";
 import { proposeAdjustment, proposePayment } from "./pipeline/propose";
@@ -38,13 +38,18 @@ function reconcileLine(
     adjustments,
   });
 
+  // The line's patient-responsibility bucket is the sum of its `PR` reasons (D18),
+  // read off the per-reason classifications so it never folds in a `CO` write-down.
+  const patientResponsibility = cents(
+    sumClassified(adjustments, "patient-responsibility"),
+  );
+
   return {
     claimControlNumber: parsedClaim.claimControlNumber,
     lineNumber: parsedLine.lineNumber,
     billed: parsedLine.billed,
     paid: parsedLine.paid,
-    // Populating the patient-responsibility bucket lands with the PR ticket.
-    patientResponsibility: ZERO_CENTS,
+    patientResponsibility,
     adjustments,
     disposition,
     ...(balance.warning ? { balanceWarning: balance.warning } : {}),
