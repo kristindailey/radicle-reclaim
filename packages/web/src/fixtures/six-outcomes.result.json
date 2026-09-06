@@ -1,0 +1,345 @@
+{
+  "controlNumber": "0000000009",
+  "claims": [
+    {
+      "claimControlNumber": "CLAIM101",
+      "payerControlNumber": "PAYER201",
+      "matched": true,
+      "lines": [
+        {
+          "claimControlNumber": "CLAIM101",
+          "lineNumber": 1,
+          "billed": 50000,
+          "paid": 50000,
+          "patientResponsibility": 0,
+          "adjustments": [],
+          "disposition": "clean-payment"
+        }
+      ],
+      "adjustments": []
+    },
+    {
+      "claimControlNumber": "CLAIM102",
+      "payerControlNumber": "PAYER202",
+      "matched": true,
+      "lines": [
+        {
+          "claimControlNumber": "CLAIM102",
+          "lineNumber": 1,
+          "billed": 30000,
+          "paid": 25000,
+          "patientResponsibility": 0,
+          "adjustments": [
+            {
+              "groupCode": "CO",
+              "carc": "45",
+              "carcText": "Charge exceeds fee schedule/maximum allowable or contracted/legislated fee arrangement",
+              "amount": 5000,
+              "classification": "contractual"
+            }
+          ],
+          "disposition": "contractual-adjustment"
+        }
+      ],
+      "adjustments": []
+    },
+    {
+      "claimControlNumber": "CLAIM103",
+      "payerControlNumber": "PAYER203",
+      "matched": true,
+      "lines": [
+        {
+          "claimControlNumber": "CLAIM103",
+          "lineNumber": 1,
+          "billed": 25000,
+          "paid": 0,
+          "patientResponsibility": 0,
+          "adjustments": [
+            {
+              "groupCode": "PI",
+              "carc": "197",
+              "carcText": "Precertification/authorization/notification/pre-treatment absent",
+              "amount": 25000,
+              "classification": "recoverable-denial"
+            }
+          ],
+          "disposition": "recoverable-denial"
+        }
+      ],
+      "adjustments": []
+    },
+    {
+      "claimControlNumber": "CLAIM104",
+      "payerControlNumber": "PAYER204",
+      "matched": true,
+      "lines": [
+        {
+          "claimControlNumber": "CLAIM104",
+          "lineNumber": 1,
+          "billed": 20000,
+          "paid": 15000,
+          "patientResponsibility": 2000,
+          "adjustments": [
+            {
+              "groupCode": "CO",
+              "carc": "45",
+              "carcText": "Charge exceeds fee schedule/maximum allowable or contracted/legislated fee arrangement",
+              "amount": 3000,
+              "classification": "contractual"
+            },
+            {
+              "groupCode": "PR",
+              "carc": "2",
+              "carcText": "Coinsurance amount",
+              "amount": 2000,
+              "classification": "patient-responsibility"
+            }
+          ],
+          "disposition": "contractual-adjustment"
+        }
+      ],
+      "adjustments": []
+    },
+    {
+      "claimControlNumber": "CLAIM105",
+      "payerControlNumber": "PAYER205",
+      "matched": false,
+      "lines": [
+        {
+          "claimControlNumber": "CLAIM105",
+          "lineNumber": 1,
+          "billed": 10000,
+          "paid": 10000,
+          "patientResponsibility": 0,
+          "adjustments": [],
+          "disposition": "unmatched"
+        }
+      ],
+      "adjustments": []
+    },
+    {
+      "claimControlNumber": "CLAIM106",
+      "payerControlNumber": "PAYER206",
+      "matched": true,
+      "lines": [
+        {
+          "claimControlNumber": "CLAIM106",
+          "lineNumber": 1,
+          "billed": 30000,
+          "paid": 10000,
+          "patientResponsibility": 0,
+          "adjustments": [
+            {
+              "groupCode": "PI",
+              "carc": "197",
+              "carcText": "Precertification/authorization/notification/pre-treatment absent",
+              "amount": 10000,
+              "classification": "recoverable-denial"
+            }
+          ],
+          "disposition": "out-of-balance",
+          "balanceWarning": "line does not foot: billed 30000 ≠ paid 10000 + Σ CAS 10000"
+        }
+      ],
+      "adjustments": [],
+      "balanceWarning": "claim does not foot: billed 30000 ≠ paid 10000 + Σ CAS 10000"
+    }
+  ],
+  "lines": [
+    {
+      "claimControlNumber": "CLAIM101",
+      "lineNumber": 1,
+      "billed": 50000,
+      "paid": 50000,
+      "patientResponsibility": 0,
+      "adjustments": [],
+      "disposition": "clean-payment"
+    },
+    {
+      "claimControlNumber": "CLAIM102",
+      "lineNumber": 1,
+      "billed": 30000,
+      "paid": 25000,
+      "patientResponsibility": 0,
+      "adjustments": [
+        {
+          "groupCode": "CO",
+          "carc": "45",
+          "carcText": "Charge exceeds fee schedule/maximum allowable or contracted/legislated fee arrangement",
+          "amount": 5000,
+          "classification": "contractual"
+        }
+      ],
+      "disposition": "contractual-adjustment"
+    },
+    {
+      "claimControlNumber": "CLAIM103",
+      "lineNumber": 1,
+      "billed": 25000,
+      "paid": 0,
+      "patientResponsibility": 0,
+      "adjustments": [
+        {
+          "groupCode": "PI",
+          "carc": "197",
+          "carcText": "Precertification/authorization/notification/pre-treatment absent",
+          "amount": 25000,
+          "classification": "recoverable-denial"
+        }
+      ],
+      "disposition": "recoverable-denial"
+    },
+    {
+      "claimControlNumber": "CLAIM104",
+      "lineNumber": 1,
+      "billed": 20000,
+      "paid": 15000,
+      "patientResponsibility": 2000,
+      "adjustments": [
+        {
+          "groupCode": "CO",
+          "carc": "45",
+          "carcText": "Charge exceeds fee schedule/maximum allowable or contracted/legislated fee arrangement",
+          "amount": 3000,
+          "classification": "contractual"
+        },
+        {
+          "groupCode": "PR",
+          "carc": "2",
+          "carcText": "Coinsurance amount",
+          "amount": 2000,
+          "classification": "patient-responsibility"
+        }
+      ],
+      "disposition": "contractual-adjustment"
+    },
+    {
+      "claimControlNumber": "CLAIM105",
+      "lineNumber": 1,
+      "billed": 10000,
+      "paid": 10000,
+      "patientResponsibility": 0,
+      "adjustments": [],
+      "disposition": "unmatched"
+    },
+    {
+      "claimControlNumber": "CLAIM106",
+      "lineNumber": 1,
+      "billed": 30000,
+      "paid": 10000,
+      "patientResponsibility": 0,
+      "adjustments": [
+        {
+          "groupCode": "PI",
+          "carc": "197",
+          "carcText": "Precertification/authorization/notification/pre-treatment absent",
+          "amount": 10000,
+          "classification": "recoverable-denial"
+        }
+      ],
+      "disposition": "out-of-balance",
+      "balanceWarning": "line does not foot: billed 30000 ≠ paid 10000 + Σ CAS 10000"
+    }
+  ],
+  "proposedLines": [
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM101|LINE#1|PMT",
+      "kind": "payment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM101",
+      "lineNumber": 1,
+      "amount": 50000
+    },
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM102|LINE#1|PMT",
+      "kind": "payment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM102",
+      "lineNumber": 1,
+      "amount": 25000
+    },
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM102|LINE#1|CO45",
+      "kind": "adjustment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM102",
+      "lineNumber": 1,
+      "amount": 5000,
+      "groupCode": "CO",
+      "carc": "45"
+    },
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM103|LINE#1|PI197",
+      "kind": "adjustment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM103",
+      "lineNumber": 1,
+      "amount": 25000,
+      "groupCode": "PI",
+      "carc": "197"
+    },
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM104|LINE#1|PMT",
+      "kind": "payment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM104",
+      "lineNumber": 1,
+      "amount": 15000
+    },
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM104|LINE#1|CO45",
+      "kind": "adjustment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM104",
+      "lineNumber": 1,
+      "amount": 3000,
+      "groupCode": "CO",
+      "carc": "45"
+    },
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM104|LINE#1|PR2",
+      "kind": "adjustment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM104",
+      "lineNumber": 1,
+      "amount": 2000,
+      "groupCode": "PR",
+      "carc": "2"
+    },
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM106|LINE#1|PMT",
+      "kind": "payment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM106",
+      "lineNumber": 1,
+      "amount": 10000
+    },
+    {
+      "idempotencyKey": "0000000009|CLAIM#CLAIM106|LINE#1|PI197",
+      "kind": "adjustment",
+      "status": "pending-review",
+      "claimControlNumber": "CLAIM106",
+      "lineNumber": 1,
+      "amount": 10000,
+      "groupCode": "PI",
+      "carc": "197"
+    }
+  ],
+  "aggregates": {
+    "totalRemittance": 165000,
+    "totalPaid": 110000,
+    "totalContractual": 8000,
+    "totalPatientResponsibility": 2000,
+    "dollarsAtRisk": 25000,
+    "unmatchedCount": 1,
+    "outOfBalanceCount": 1
+  },
+  "transactionBalance": {
+    "balances": true
+  },
+  "logFigures": {
+    "linesReconciled": 6,
+    "dollarsAtRisk": 25000,
+    "outOfBalanceCount": 1
+  }
+}

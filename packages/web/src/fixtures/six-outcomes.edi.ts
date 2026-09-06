@@ -1,0 +1,32 @@
+/**
+ * A copy of the core's six-outcome 835 fixture
+ * (`core/src/__tests__/fixtures/six-outcomes.835.edi`), embedded as a string so
+ * the web fixture harness reconciles the same remittance the core tests do
+ * without reaching into the core package's test directory or touching the
+ * filesystem. Synthetic, zero PHI. See the core fixture for the outcome map.
+ */
+export const SIX_OUTCOMES_835 = `ISA*00*          *00*          *ZZ*SENDER         *ZZ*RECEIVER       *260101*1200*^*00501*000000009*0*P*:~
+GS*HP*SENDER*RECEIVER*20260101*1200*9*X*005010X221A1~
+ST*835*0001~
+BPR*I*1100*C*ACH*CCP*01*999*DA*123*1512345678**01*888*DA*456*20260102~
+TRN*1*0000000009*1512345678~
+CLP*CLAIM101*1*500*500**MC*PAYER201*11~
+SVC*HC:99213*500*500**1~
+CLP*CLAIM102*1*300*250**MC*PAYER202*11~
+SVC*HC:99214*300*250**1~
+CAS*CO*45*50~
+CLP*CLAIM103*4*250*0**MC*PAYER203*11~
+SVC*HC:99215*250*0**1~
+CAS*PI*197*250~
+CLP*CLAIM104*1*200*150*20*MC*PAYER204*11~
+SVC*HC:99214*200*150**1~
+CAS*CO*45*30~
+CAS*PR*2*20~
+CLP*CLAIM105*1*100*100**MC*PAYER205*11~
+SVC*HC:99213*100*100**1~
+CLP*CLAIM106*1*300*100**MC*PAYER206*11~
+SVC*HC:99214*300*100**1~
+CAS*PI*197*100~
+SE*21*0001~
+GE*1*9~
+IEA*1*000000009~`;

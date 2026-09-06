@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // ts-jest transpiles per-file for Jest's CommonJS runtime. The package is
+    // "type": "module", so the base config's nodenext would emit ESM that Jest
+    // cannot require; pin CommonJS here (core resolves via jest's moduleNameMapper).
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "types": ["node", "jest"],
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // The Vue app is bundled by Vite, so it resolves like a bundler and needs the
+    // DOM lib; the base config's nodenext/ES2022-only setup is for the Node
+    // packages. Jest uses tsconfig.jest.json instead (nodenext, no DOM).
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "types": ["node"],
+    "noEmit": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue", "env.d.ts"],
+  "exclude": ["src/**/__tests__/**"]
+}
