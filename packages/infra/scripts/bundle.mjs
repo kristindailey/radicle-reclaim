@@ -13,5 +13,5 @@ await build({
   target: "node20",
   format: "cjs",
   outfile: "dist-lambda/lambda.js",
-  external: ["@aws-sdk/client-*"],
+  external: ["@aws-sdk/client-s3"],
 });
