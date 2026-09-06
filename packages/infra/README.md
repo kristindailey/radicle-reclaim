@@ -52,12 +52,11 @@ pnpm --filter infra seed        # write + read back the fixture charges (needs R
 
 ## Deploy
 
-`pulumi up` runs the program in [`index.ts`](index.ts), provisioning the table, the ingest bucket, and the ingest Lambda. The Lambda ships `dist-lambda/`, so bundle before deploy. Running it needs the Pulumi CLI, a selected stack, and AWS credentials:
+Pulumi's `nodejs` runtime runs the compiled `dist/index.js` (`main` in `package.json`), not [`index.ts`](index.ts) directly, and the Lambdas ship the bundled `dist-lambda/` and `dist-lambda-read/`. All three are build artifacts, so a bare `pulumi up` can deploy a stale stack. Use `pnpm --filter infra deploy`: its `predeploy` bundles the Lambdas and compiles the program first, then runs `pulumi up`. Deploying needs the Pulumi CLI, a selected stack, and AWS credentials:
 
 ```bash
 pulumi stack init dev
-pnpm --filter infra bundle
-pulumi up
+pnpm --filter infra deploy
 RECLAIM_TABLE_NAME=$(pulumi stack output tableName) pnpm --filter infra seed
 ```
 
