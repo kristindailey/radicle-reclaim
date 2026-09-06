@@ -137,11 +137,18 @@ export function reconcile(input: ReconcileInput): ReconciliationResult {
     parsed.claims,
   );
 
+  const aggregates = aggregate(lines);
+
   return {
     claims,
     lines,
     proposedLines,
-    aggregates: aggregate(lines),
+    aggregates,
     transactionBalance,
+    logFigures: {
+      linesReconciled: lines.length,
+      dollarsAtRisk: aggregates.dollarsAtRisk,
+      outOfBalanceCount: aggregates.outOfBalanceCount,
+    },
   };
 }

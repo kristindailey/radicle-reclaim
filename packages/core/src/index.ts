@@ -9,6 +9,7 @@ export type {
   ClassifiedAdjustment,
   Disposition,
   GroupCode,
+  LogFigures,
   ProposedLine,
   ProposedLineKind,
   ProposedLineStatus,
