@@ -172,6 +172,21 @@ export interface Aggregates {
   outOfBalanceCount: number;
 }
 
+/**
+ * The figures the ingest Lambda emits as structured JSON logs (D15), lifted onto
+ * the result so the Lambda reads them off directly instead of recomputing.
+ * Duration, the one figure a pure core cannot supply (no clock), is added at the
+ * Lambda edge.
+ */
+export interface LogFigures {
+  /** Count of reconciled service lines across the remittance. */
+  linesReconciled: number;
+  /** Dollars at risk (recoverable denials, out-of-balance lines excluded, D19), integer cents. */
+  dollarsAtRisk: Cents;
+  /** Count of out-of-balance lines. */
+  outOfBalanceCount: number;
+}
+
 /** The whole result the seam returns in one call (issue #1). */
 export interface ReconciliationResult {
   /** Reconciled claims, rolled up from lines. */
@@ -184,4 +199,6 @@ export interface ReconciliationResult {
   aggregates: Aggregates;
   /** Whole-transaction balance: the `BPR` total vs the sum of claim payments (D6). */
   transactionBalance: TransactionBalance;
+  /** The figures the Lambda emits as structured JSON logs, without recomputing (D15). */
+  logFigures: LogFigures;
 }
