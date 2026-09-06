@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { reconcile, cents } from "core";
-import type { Charge, ReconciliationResult } from "core";
+import { reconcile } from "core";
+import type { ReconciliationResult } from "core";
 
 import {
   CHARGE_SK,
@@ -12,6 +12,7 @@ import {
   buildItems,
 } from "../src/persistence";
 import type { LineItem, ProposedLineItem } from "../src/persistence";
+import { FIXTURE_CHARGES } from "../src/seed/fixture-charges";
 
 /**
  * Issue #23 (D12): the persistence contract, verified over the core's own
@@ -35,31 +36,8 @@ const raw835 = readFileSync(
   "utf8",
 );
 
-const seededCharges: Charge[] = [
-  {
-    claimControlNumber: "CLAIM101",
-    lines: [{ lineNumber: 1, billed: cents(50_000), procedureCode: "99213" }],
-  },
-  {
-    claimControlNumber: "CLAIM102",
-    lines: [{ lineNumber: 1, billed: cents(30_000), procedureCode: "99214" }],
-  },
-  {
-    claimControlNumber: "CLAIM103",
-    lines: [{ lineNumber: 1, billed: cents(25_000), procedureCode: "99215" }],
-  },
-  {
-    claimControlNumber: "CLAIM104",
-    lines: [{ lineNumber: 1, billed: cents(20_000), procedureCode: "99214" }],
-  },
-  {
-    claimControlNumber: "CLAIM106",
-    lines: [{ lineNumber: 1, billed: cents(30_000), procedureCode: "99214" }],
-  },
-];
-
 function build(): { result: ReconciliationResult; items: ReturnType<typeof buildItems> } {
-  const result = reconcile({ charges: seededCharges, raw835 });
+  const result = reconcile({ charges: FIXTURE_CHARGES, raw835 });
   return { result, items: buildItems(CONTROL_NUMBER, result) };
 }
 

@@ -1,5 +1,6 @@
 export { buildItems } from "./items";
 export {
+  ATTR,
   CHARGE_SK,
   GSI1,
   KEY_PREFIX,
