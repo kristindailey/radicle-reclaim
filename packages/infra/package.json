@@ -17,7 +17,9 @@
     "prebundle": "pnpm --filter core build",
     "bundle": "node scripts/bundle.mjs",
     "preseed": "pnpm --filter infra build",
-    "seed": "node dist/src/seed/seed.js"
+    "seed": "node dist/src/seed/seed.js",
+    "predeploy": "pnpm bundle && pnpm build",
+    "deploy": "pulumi up"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1127.0",
