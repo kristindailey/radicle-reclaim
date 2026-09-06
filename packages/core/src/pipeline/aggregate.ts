@@ -1,5 +1,6 @@
-import { ZERO_CENTS, cents } from "../money";
+import { cents } from "../money";
 import type { AdjustmentClassification, Aggregates, ReconciledLine } from "../types";
+import { sumClassified } from "./classify";
 
 /** Sums the amounts of every classified adjustment of one kind across all lines. */
 function sumByClassification(
@@ -7,11 +8,7 @@ function sumByClassification(
   classification: AdjustmentClassification,
 ): number {
   return lines.reduce(
-    (total, line) =>
-      total +
-      line.adjustments
-        .filter((adj) => adj.classification === classification)
-        .reduce((lineTotal, adj) => lineTotal + adj.amount, 0),
+    (total, line) => total + sumClassified(line.adjustments, classification),
     0,
   );
 }
@@ -19,17 +16,19 @@ function sumByClassification(
 /**
  * The dashboard aggregates (D13), all in integer cents: **total remittance**
  * (billed across the remittance), **total paid**, **total contractual** (group
- * `CO` write-downs), **dollars at risk** (the recoverable-denial hero figure,
- * D4), and the disposition counts. Patient responsibility lands with its own
- * ticket (D18) and stays zero; excluding out-of-balance lines from dollars at
- * risk (D19) lands with the out-of-balance ticket.
+ * `CO` write-downs), **total patient responsibility** (group `PR`, its own bucket,
+ * never folded into contractual, D18), **dollars at risk** (the recoverable-denial
+ * hero figure, D4), and the disposition counts. Excluding out-of-balance lines
+ * from dollars at risk (D19) lands with the out-of-balance ticket.
  */
 export function aggregate(lines: ReconciledLine[]): Aggregates {
   return {
     totalRemittance: cents(lines.reduce((total, line) => total + line.billed, 0)),
     totalPaid: cents(lines.reduce((total, line) => total + line.paid, 0)),
     totalContractual: cents(sumByClassification(lines, "contractual")),
-    totalPatientResponsibility: ZERO_CENTS,
+    totalPatientResponsibility: cents(
+      sumByClassification(lines, "patient-responsibility"),
+    ),
     dollarsAtRisk: cents(sumByClassification(lines, "recoverable-denial")),
     unmatchedCount: lines.filter((line) => line.disposition === "unmatched")
       .length,

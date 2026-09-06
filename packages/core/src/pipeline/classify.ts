@@ -66,3 +66,13 @@ export function classifyAdjustment(
     classification: classify(adjustment.groupCode, adjustment.carc),
   };
 }
+
+/** Sums the amounts of the classified adjustments in one bucket, in raw cents. */
+export function sumClassified(
+  adjustments: ClassifiedAdjustment[],
+  classification: AdjustmentClassification,
+): number {
+  return adjustments
+    .filter((adj) => adj.classification === classification)
+    .reduce((total, adj) => total + adj.amount, 0);
+}
