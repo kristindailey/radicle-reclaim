@@ -116,7 +116,15 @@ export interface ReconciledClaim {
   claimControlNumber: string;
   /** Payer's own control number, `CLP07`, captured for resubmission, never the join key (D3). */
   payerControlNumber?: string;
+  /** Whether this claim's `CLP01` round-tripped to a seeded charge (D3). */
+  matched: boolean;
   lines: ReconciledLine[];
+  /**
+   * Claim-level `CAS` adjustments (D2): reasons carried on the claim header rather
+   * than any one service line, classified like a line's. One entry per group-and-
+   * reason. Empty for the common case where every `CAS` sits under an `SVC`.
+   */
+  adjustments: ClassifiedAdjustment[];
   /** Present only when the claim's amounts do not foot at the claim grain (D6). */
   balanceWarning?: string;
 }

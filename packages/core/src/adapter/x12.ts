@@ -103,9 +103,14 @@ function toGroupCode(raw: string | undefined): GroupCode | "unknown" {
  * synchronously here (its transform calls back synchronously), so the seam stays
  * a plain function with no I/O. Empty input yields no segments, and the trailing
  * empty segment a terminating newline produces is dropped.
+ *
+ * A Buffer is decoded as `latin1`, not `ascii`: `ascii` masks the high bit and
+ * silently corrupts any byte above 0x7F (an accented character in a name field,
+ * a stray BOM), whereas `latin1` round-trips every byte 1:1 so nothing is mangled
+ * at the boundary.
  */
 export function lex835(raw: Buffer | string): FormattedSegment[] {
-  const text = typeof raw === "string" ? raw : raw.toString("ascii");
+  const text = typeof raw === "string" ? raw : raw.toString("latin1");
   if (text.trim() === "") {
     return [];
   }
