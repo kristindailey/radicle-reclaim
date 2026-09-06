@@ -21,6 +21,12 @@ export const KEY_PREFIX = {
   PROPOSED_ADJUSTMENT: "PROPADJ#",
 } as const;
 
+/** Base-table key attribute names (D12). The Pulumi table declares its key schema from these. */
+export const ATTR = {
+  PK: "PK",
+  SK: "SK",
+} as const;
+
 /** The claim header's sort key. */
 export const CHARGE_SK = "CHARGE";
 

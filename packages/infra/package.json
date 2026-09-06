@@ -13,9 +13,14 @@
     "pretypecheck": "pnpm --filter core build",
     "typecheck": "tsc --noEmit",
     "prebuild": "pnpm --filter core build",
-    "build": "tsc"
+    "build": "tsc",
+    "preseed": "pnpm --filter infra build",
+    "seed": "node dist/src/seed/seed.js"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1127.0",
+    "@aws-sdk/lib-dynamodb": "^3.1127.0",
+    "@pulumi/aws": "^6.83.4",
     "@pulumi/pulumi": "^3.261.0",
     "core": "workspace:*"
   },
