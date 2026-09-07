@@ -6,6 +6,8 @@ Serverless remittance reconciliation engine for Medicaid billing. Reconciles 835
 
 <img width="1529" height="819" alt="reclaim" src="https://github.com/user-attachments/assets/31c73cd2-60dc-4e9e-8e2d-97d82362b510" />
 
+Live demo: https://radicle-reclaim-pi.vercel.app/
+
 ## The gap it fills
 
 Medicaid billing has two halves. Money-out is where you send a claim to the payer and AccuBill already does this well. 837 generation, config, and pre-charge checks all shipped. Money-in is where the payer pays, denies, or short-pays and you reconcile what came back. That half has a possible hole.
