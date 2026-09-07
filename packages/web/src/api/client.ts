@@ -73,6 +73,7 @@ query ReconciledLines {
 const DASHBOARD = `
 query Dashboard {
   dashboard {
+    controlNumber
     totalRemittance
     totalPaid
     totalContractual

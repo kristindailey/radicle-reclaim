@@ -28,7 +28,10 @@ function readerFor(result: ReconciliationResult): DashboardReader {
 
   return {
     reconciledLines: async () => reconciledLines,
-    dashboard: async () => ({ ...result.aggregates }),
+    dashboard: async () => ({
+      ...result.aggregates,
+      controlNumber: result.controlNumber,
+    }),
     proposedLines: async (claimControlNumber) =>
       result.proposedLines
         .filter((line) => line.claimControlNumber === claimControlNumber)
@@ -78,11 +81,17 @@ describe("loadReconciliationResult", () => {
     );
   });
 
-  it("reads only: it carries no claim rollup or control number the API does not serve", async () => {
+  it("reads only: it carries no claim rollup the API does not serve", async () => {
     const result = await loadReconciliationResult(readerFor(fixture));
 
     expect(result.claims).toEqual([]);
-    expect(result.controlNumber).toBe("");
+  });
+
+  it("serves the 835 control number the dashboard query now carries", async () => {
+    const result = await loadReconciliationResult(readerFor(fixture));
+
+    expect(result.controlNumber).toBe(fixture.controlNumber);
+    expect(result.controlNumber).not.toBe("");
   });
 
   it("feeds the sections output identical to the fixture, so no composable changes", async () => {

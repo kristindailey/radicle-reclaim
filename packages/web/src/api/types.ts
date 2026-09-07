@@ -36,6 +36,7 @@ export interface ApiProposedLine {
 }
 
 export interface ApiDashboard {
+  controlNumber: string;
   totalRemittance: number;
   totalPaid: number;
   totalContractual: number;

@@ -68,11 +68,11 @@ function toProposedLine(line: ApiProposedLine): ProposedLine {
  * per-claim query gathered over the distinct claims. The web layer only reads and
  * reshapes; it runs no reconciliation, classification, or balancing (STANDARDS).
  *
- * The read API serves no claim rollup (D2) and no 835 control number, so `claims`
- * is empty and `controlNumber` blank. For this build every `CAS` sits under its
- * `SVC`, so the reasons list derives wholly from the lines and reads the same as
- * the fixture. `transactionBalance` and `logFigures` are the Lambda's own outputs,
- * not read fields; they carry structural neutrals the dashboard never reads.
+ * The read API serves no claim rollup (D2), so `claims` is empty; the 835 control
+ * number now rides on the dashboard query (issue #49). For this build every `CAS`
+ * sits under its `SVC`, so the reasons list derives wholly from the lines and reads
+ * the same as the fixture. `transactionBalance` and `logFigures` are the Lambda's
+ * own outputs, not read fields; they carry structural neutrals the dashboard never reads.
  */
 export async function loadReconciliationResult(
   reader: DashboardReader,
@@ -94,7 +94,7 @@ export async function loadReconciliationResult(
   const lines = apiLines.map(toLine);
 
   return {
-    controlNumber: "",
+    controlNumber: apiDashboard.controlNumber,
     claims: [],
     lines,
     proposedLines: perClaim.flat().map(toProposedLine),

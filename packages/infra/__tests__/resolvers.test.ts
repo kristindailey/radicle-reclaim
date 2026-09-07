@@ -132,6 +132,7 @@ describe("toDashboard: the stat-tile figures, dollars at risk off the GSI", () =
     // store does not persist (#23), is out of this fixture's and this ticket's scope.
     const { aggregates } = result;
     expect(dashboard).toEqual({
+      controlNumber: CONTROL_NUMBER,
       totalRemittance: aggregates.totalRemittance,
       totalPaid: aggregates.totalPaid,
       totalContractual: aggregates.totalContractual,
@@ -141,6 +142,18 @@ describe("toDashboard: the stat-tile figures, dollars at risk off the GSI", () =
       outOfBalanceCount: aggregates.outOfBalanceCount,
     });
     expect(dashboard.dollarsAtRisk).toBe(25_000);
+  });
+
+  it("serves the 835 control number off the stored items, blank when none", () => {
+    const { lineItems, recoverableDenialItems } = reconciled();
+
+    // The TRN02 the ingest Lambda stamped on every item (persistence/schema.ts):
+    // the dashboard header's "835 control" value, read off the scanned lines.
+    expect(toDashboard(lineItems, recoverableDenialItems).controlNumber).toBe(
+      CONTROL_NUMBER,
+    );
+    // An empty table serves a blank control number, never undefined.
+    expect(toDashboard([], []).controlNumber).toBe("");
   });
 
   it("draws dollars at risk only from the GSI input, never the full-line scan", () => {
