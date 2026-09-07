@@ -126,7 +126,15 @@ export function useReconciliationTable(
   return computed(() => {
     const resolved = toValue(result);
     const proposedByRow = groupProposedLinesByRow(resolved.proposedLines);
-    return resolved.lines.map((line) => {
+    // Order the table by claim control number, then line, so it reads 101, 102,
+    // 103 in order; the read API returns lines in no guaranteed order (STANDARDS:
+    // the web layer only sorts for display, it never re-reconciles).
+    const orderedLines = [...resolved.lines].sort(
+      (a, b) =>
+        a.claimControlNumber.localeCompare(b.claimControlNumber, undefined, { numeric: true }) ||
+        a.lineNumber - b.lineNumber,
+    );
+    return orderedLines.map((line) => {
       const key = `${line.claimControlNumber}-${line.lineNumber}`;
       return {
         key,

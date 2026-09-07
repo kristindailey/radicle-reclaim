@@ -74,7 +74,6 @@ function toggle(key: string): void {
               <span class="badge" :class="`badge--${row.disposition.tone}`">
                 {{ row.disposition.label }}
               </span>
-              <p v-if="row.balanceWarning" class="warning">{{ row.balanceWarning }}</p>
             </td>
             <td class="actions-cell">
               <!-- Inert row-actions affordance (issue #52); the click is
@@ -177,7 +176,10 @@ function toggle(key: string): void {
 
 .adjustment {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* Fixed first track (wide enough for the widest group+CARC badge) so the
+     reason text and amount start at the same x in every row, so the whole
+     Adjustments column lines up vertically, not just within one cell. */
+  grid-template-columns: 4rem 1fr auto;
   gap: 0.5rem;
   align-items: baseline;
 }
@@ -191,6 +193,8 @@ function toggle(key: string): void {
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
+  /* Stay content-sized inside the fixed grid track, don't stretch to fill it. */
+  justify-self: start;
 }
 
 .carc-text {
@@ -227,12 +231,6 @@ function toggle(key: string): void {
 
 .badge--clean {
   background: var(--pill-clean-bg);
-}
-
-.warning {
-  margin: 0.4rem 0 0;
-  font-size: var(--text-xs);
-  color: #92400e;
 }
 
 .actions-col {
