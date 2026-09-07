@@ -13,7 +13,7 @@ defineProps<{ result: ReconciliationResult }>();
 <template>
   <main class="dashboard">
     <header class="dashboard__header">
-      <h1>Reclaim: denial analytics</h1>
+      <h1>Reclaim</h1>
       <p>835 control {{ result.controlNumber }}</p>
     </header>
 
