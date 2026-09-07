@@ -27,18 +27,16 @@ const reasons = useTopDenialReasons(() => props.result);
 </template>
 
 <style scoped>
-.reasons {
-  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
 .reasons__title {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
+  margin: 0 0 0.9rem;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
 }
 
 .muted {
   margin: 0;
-  color: #999;
+  color: var(--color-text-faint);
 }
 
 .reasons__list {
@@ -54,40 +52,40 @@ const reasons = useTopDenialReasons(() => props.result);
   grid-template-columns: auto auto 1fr auto;
   gap: 0.75rem;
   align-items: baseline;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #e2e2e2;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 0.9rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  font-size: var(--text-sm);
 }
 
 .reason__rank {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  color: #b91c1c;
+  color: var(--color-action);
   min-width: 1.25rem;
 }
 
 .reason__code {
-  font-family: var(--mono);
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 0.05rem 0.35rem;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  color: #444;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
 .reason__text {
-  color: #333;
+  color: var(--color-text);
 }
 
 .reason__amount {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
-  color: #b91c1c;
+  color: var(--color-action);
 }
 </style>

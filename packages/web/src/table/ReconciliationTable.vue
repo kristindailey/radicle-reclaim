@@ -38,6 +38,7 @@ function toggle(key: string): void {
           <th class="num">Paid</th>
           <th>Adjustments</th>
           <th>Disposition</th>
+          <th class="actions-col">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -75,9 +76,22 @@ function toggle(key: string): void {
               </span>
               <p v-if="row.balanceWarning" class="warning">{{ row.balanceWarning }}</p>
             </td>
+            <td class="actions-cell">
+              <!-- Inert row-actions affordance (issue #52); the click is
+                   swallowed so it never toggles the row. -->
+              <button
+                type="button"
+                class="actions-menu"
+                tabindex="-1"
+                aria-label="Row actions"
+                @click.stop
+              >
+                ⋯
+              </button>
+            </td>
           </tr>
           <tr v-if="expanded.has(row.key)" class="detail-row">
-            <td :colspan="6">
+            <td :colspan="7">
               <div class="detail">
                 <p class="detail__title">Proposed lines · pending review</p>
                 <p v-if="row.proposedLines.length === 0" class="muted">
@@ -114,26 +128,27 @@ function toggle(key: string): void {
 }
 
 .recon {
-  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
 }
 
 .recon th,
 .recon td {
-  padding: 0.6rem 0.75rem;
+  padding: 0.65rem 0.85rem;
   text-align: left;
-  border-bottom: 1px solid #e2e2e2;
-  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
 }
 
 .recon thead th {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #666;
-  border-bottom-width: 2px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  vertical-align: bottom;
+  border-bottom: 1px solid var(--color-border-strong);
 }
 
 .num {
@@ -143,12 +158,13 @@ function toggle(key: string): void {
 }
 
 .mono {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
+  white-space: nowrap;
 }
 
 .muted {
   margin: 0;
-  color: #999;
+  color: var(--color-text-faint);
 }
 
 .adjustments {
@@ -167,61 +183,84 @@ function toggle(key: string): void {
 }
 
 .group {
-  font-family: var(--mono);
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   white-space: nowrap;
   font-weight: 600;
   padding: 0.05rem 0.35rem;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  color: #444;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
 }
 
 .carc-text {
-  color: #333;
+  color: var(--color-text);
 }
 
 .carc-amount {
-  color: #666;
+  color: var(--color-text-muted);
 }
 
+/* OPEN/CLOSED-style solid status pills, echoing fiscal-periods.png. */
 .badge {
   display: inline-block;
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
   white-space: nowrap;
+  color: var(--pill-text);
 }
 
 .badge--risk {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #f3c0c0;
+  background: var(--pill-risk-bg);
 }
 
 .badge--warning {
-  background: #fffbeb;
-  color: #92400e;
-  border: 1px solid #f5d98b;
+  background: var(--pill-warning-bg);
 }
 
 .badge--neutral {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d9dce1;
+  background: var(--pill-neutral-bg);
 }
 
 .badge--clean {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbe6c8;
+  background: var(--pill-clean-bg);
 }
 
 .warning {
   margin: 0.4rem 0 0;
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   color: #92400e;
+}
+
+.actions-col {
+  text-align: center;
+  width: 1%;
+}
+
+.actions-cell {
+  text-align: center;
+}
+
+.actions-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-card);
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: default;
+}
+
+.actions-menu:hover {
+  background: var(--color-hover);
 }
 
 .row {
@@ -229,36 +268,36 @@ function toggle(key: string): void {
 }
 
 .row:hover {
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
 }
 
 .row:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
 
 .row--open {
-  background: #f1f5f9;
+  background: var(--color-hover);
 }
 
 .caret {
   display: inline-block;
   width: 1em;
-  color: #999;
+  color: var(--color-text-faint);
   font-size: 0.7rem;
 }
 
 .detail-row > td {
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
   padding-top: 0.4rem;
 }
 
 .detail__title {
   margin: 0 0 0.5rem;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .proposed {
