@@ -31,3 +31,4 @@ pnpm-debug.log*
 #mcp
 .mcp.json
 /.playwright-mcp/
+.vercel
