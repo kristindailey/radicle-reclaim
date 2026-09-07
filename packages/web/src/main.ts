@@ -1,8 +1,25 @@
 import { createApp } from "vue";
 
 import App from "./App.vue";
-import { sixOutcomeResult } from "./fixtures/six-outcomes.result";
+import { createAppSyncReader, readAppSyncConfig } from "./api/client";
+import { loadReconciliationResult } from "./api/loadReconciliationResult";
 
-// The scaffold mounts over the fixture result. In the real app this comes from
-// AppSync (infra spec); either way the web layer reads it, never reconciles it.
-createApp(App, { result: sixOutcomeResult }).mount("#app");
+// The dashboard reads live ingested data from the AppSync read API (issue #33); it
+// renders the result, it never reconciles (STANDARDS). The fixture harness stays
+// for the tests, not the app.
+async function bootstrap(): Promise<void> {
+  try {
+    const reader = createAppSyncReader(readAppSyncConfig());
+    const result = await loadReconciliationResult(reader);
+    createApp(App, { result }).mount("#app");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load the dashboard.";
+    const mount = document.querySelector("#app");
+    if (mount) {
+      mount.textContent = message;
+    }
+  }
+}
+
+void bootstrap();
