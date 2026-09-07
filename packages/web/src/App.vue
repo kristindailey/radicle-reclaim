@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { ReconciliationResult } from "core";
 
-// The dashboard reads a result; it never reconciles (STANDARDS). Later tickets
-// fill the three section slots with the tiles, table, and ranked-reasons views.
+import StatTiles from "./tiles/StatTiles.vue";
+
+// The dashboard reads a result; it never reconciles (STANDARDS). The tiles slot
+// now defaults to the real StatTiles; later tickets fill the table and
+// ranked-reasons slots.
 defineProps<{ result: ReconciliationResult }>();
 </script>
 
@@ -15,7 +18,7 @@ defineProps<{ result: ReconciliationResult }>();
 
     <section class="dashboard__tiles">
       <slot name="tiles" :result="result">
-        <p class="placeholder">Stat tiles</p>
+        <StatTiles :result="result" />
       </slot>
     </section>
 
