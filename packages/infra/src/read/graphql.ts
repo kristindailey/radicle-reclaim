@@ -47,6 +47,8 @@ export interface GqlProposedLine {
 
 /** The dashboard stat-tile figures (D13), all money in integer cents. */
 export interface GqlDashboard {
+  /** The 835 control number (`TRN02`) the header shows, read off the stored items. */
+  controlNumber: string;
   totalRemittance: Cents;
   totalPaid: Cents;
   totalContractual: Cents;
@@ -89,6 +91,7 @@ type ProposedLine {
 }
 
 type Dashboard {
+  controlNumber: String!
   totalRemittance: Int!
   totalPaid: Int!
   totalContractual: Int!

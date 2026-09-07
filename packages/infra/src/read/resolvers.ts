@@ -82,6 +82,10 @@ export function toDashboard(
   recoverableDenialLines: LineItem[],
 ): GqlDashboard {
   return {
+    // Every stored item of an 835 carries the same `TRN02` (persistence/schema.ts),
+    // so the header's control number reads off any scanned line; an empty table
+    // serves a blank, never undefined.
+    controlNumber: lines[0]?.controlNumber ?? "",
     totalRemittance: cents(lines.reduce((total, line) => total + line.billed, 0)),
     totalPaid: cents(lines.reduce((total, line) => total + line.paid, 0)),
     totalContractual: cents(sumByClassification(lines, "contractual")),
