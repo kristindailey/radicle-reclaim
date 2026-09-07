@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { ReconciliationResult } from "core";
 
+import TopDenialReasons from "./reasons/TopDenialReasons.vue";
 import ReconciliationTable from "./table/ReconciliationTable.vue";
 import StatTiles from "./tiles/StatTiles.vue";
 
-// The dashboard reads a result; it never reconciles (STANDARDS). The tiles and
-// table slots now default to their real components; a later ticket fills the
-// ranked-reasons slot.
+// The dashboard reads a result; it never reconciles (STANDARDS). Every section
+// slot now defaults to its real component.
 defineProps<{ result: ReconciliationResult }>();
 </script>
 
@@ -31,7 +31,7 @@ defineProps<{ result: ReconciliationResult }>();
 
     <section class="dashboard__reasons">
       <slot name="reasons" :result="result">
-        <p class="placeholder">Top denial reasons by dollars</p>
+        <TopDenialReasons :result="result" />
       </slot>
     </section>
   </main>
@@ -54,12 +54,5 @@ defineProps<{ result: ReconciliationResult }>();
 
 .dashboard section {
   margin-bottom: 1.5rem;
-}
-
-.placeholder {
-  padding: 1rem;
-  border: 1px dashed #bbb;
-  border-radius: 6px;
-  color: #666;
 }
 </style>
