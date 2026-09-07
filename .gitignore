@@ -1,6 +1,7 @@
 /context/
 /.claude/
 /docs/
+/assets/
 CLAUDE.md
 CONTEXT.md
 STANDARDS.md
@@ -28,3 +29,4 @@ pnpm-debug.log*
 
 #mcp
 .mcp.json
+/.playwright-mcp/
