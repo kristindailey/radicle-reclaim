@@ -1,10 +1,11 @@
-/context/
+/context/reclaim-build-plan.md
+/context/reclaim-deliverable-shape.md
+/context/reclaim-design-decisions.md
+/context/job-description.md
 /.claude/
 /docs/
 /assets/
 CLAUDE.md
-CONTEXT.md
-STANDARDS.md
 
 # Node / pnpm
 node_modules/
