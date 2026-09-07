@@ -84,4 +84,4 @@ pnpm --filter web dev
 
 `pnpm install` and `pnpm -r test` need nothing set up: the tests run against the checked-in synthetic fixture, no AWS, no env. That is where the proof lives.
 
-`pnpm --filter web dev` reads from the deployed AppSync API, not the fixture, so it needs a live stack. Deploy `infra` (`pnpm --filter infra deploy`, then `seed`), copy the stack's `graphqlApiUrl` and `graphqlApiKey` into `packages/web/.env.local` (see `.env.example`), and the dashboard renders the six outcomes. Without those two vars the page shows a "set VITE_APPSYNC_URL / VITE_APPSYNC_API_KEY" message instead of data.
+`pnpm --filter web dev` reads from the deployed AppSync API, not the fixture, so it needs a live stack. Deploy `infra` (`pnpm --filter infra deploy`, then `seed`), copy the stack's `graphqlApiUrl` and `graphqlApiKey` into `packages/web/.env.local` (see `.env.example`), and the dashboard renders the six outcomes.
