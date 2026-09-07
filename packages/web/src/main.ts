@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 
 import App from "./App.vue";
+import "./shell/tokens.css";
 import { createAppSyncReader, readAppSyncConfig } from "./api/client";
 import { loadReconciliationResult } from "./api/loadReconciliationResult";
 

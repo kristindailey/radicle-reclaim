@@ -43,38 +43,44 @@ const rest = computed(() => tiles.value.filter((tile) => !tile.hero));
 }
 
 .tile {
+  display: flex;
+  flex-direction: column;
   padding: 1rem 1.25rem;
-  border: 1px solid #e2e2e2;
-  border-radius: 8px;
-  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  box-shadow: var(--shadow-card);
 }
 
 .tile--hero {
-  border-color: #b91c1c;
-  background: #fef2f2;
+  border-color: var(--color-primary);
+  background: var(--color-primary);
 }
 
 .tile__label {
   margin: 0 0 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .tile--hero .tile__label {
-  color: #b91c1c;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .tile__value {
-  margin: 0;
+  /* Push the value to the tile's foot so figures line up across the row even
+     when a label wraps to two lines. */
+  margin: auto 0 0;
   font-variant-numeric: tabular-nums;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text);
 }
 
 .tile--hero .tile__value {
-  font-size: 2.5rem;
-  color: #b91c1c;
+  font-size: var(--text-hero);
+  color: var(--color-card);
 }
 </style>
