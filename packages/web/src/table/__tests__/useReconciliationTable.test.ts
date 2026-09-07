@@ -59,6 +59,49 @@ describe("useReconciliationTable", () => {
     expect(row("CLAIM101").balanceWarning).toBeUndefined();
   });
 
+  it("reveals a clean line's proposed Payment, pending review (D5)", () => {
+    const clean = row("CLAIM101").proposedLines;
+    expect(clean).toHaveLength(1);
+    expect(clean[0]).toMatchObject({
+      kind: "payment",
+      kindLabel: "Payment",
+      statusLabel: "Pending review",
+      amount: formatCents(50_000),
+    });
+    // A Payment carries no group code or CARC.
+    expect(clean[0]?.groupCode).toBeUndefined();
+    expect(clean[0]?.carc).toBeUndefined();
+  });
+
+  it("reveals a recoverable-denial line's proposed Adjustment with group code and CARC (D14)", () => {
+    const denial = row("CLAIM103");
+    expect(denial.disposition.disposition).toBe("recoverable-denial");
+    expect(denial.proposedLines).toHaveLength(1);
+    expect(denial.proposedLines[0]).toMatchObject({
+      kind: "adjustment",
+      kindLabel: "Adjustment",
+      statusLabel: "Pending review",
+      amount: formatCents(25_000),
+      groupCode: "PI",
+      carc: "197",
+    });
+  });
+
+  it("reveals a split line's Payment and both Adjustments (D8-4)", () => {
+    const split = row("CLAIM104").proposedLines;
+    expect(split.map((p) => p.kind)).toEqual(["payment", "adjustment", "adjustment"]);
+    expect(split.map((p) => p.groupCode)).toEqual([undefined, "CO", "PR"]);
+  });
+
+  it("keys each proposed-line row on its idempotency key, and reads them off the result (STANDARDS)", () => {
+    const keys = rows.flatMap((r) => r.proposedLines.map((p) => p.idempotencyKey));
+    expect(keys).toEqual(result.proposedLines.map((p) => p.idempotencyKey));
+  });
+
+  it("leaves the unmatched line with no proposed lines", () => {
+    expect(row("CLAIM105").proposedLines).toEqual([]);
+  });
+
   it("labels the other-adjustment disposition the fixture does not carry", () => {
     // The sixth disposition value has no fixture line; feed a synthetic one so the
     // composable's badge map is proven exhaustive over the union.
