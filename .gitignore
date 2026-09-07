@@ -13,6 +13,11 @@ dist-lambda-read/
 coverage/
 *.tsbuildinfo
 
+# Env / secrets
+.env
+.env.*
+!.env.example
+
 # Logs
 *.log
 npm-debug.log*
